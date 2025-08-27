@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/livestock_provider.dart';
@@ -9,137 +10,146 @@ class LivestockSummaryChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Consumer2<LivestockProvider, FarmProvider>(
+      builder: (context, livestockProvider, farmProvider, child) {
+        final selectedFarm = farmProvider.selectedFarm;
+        if (selectedFarm == null) {
+          return const Center(
+            child: Text('กรุณาเลือกฟาร์มก่อน'),
+          );
+        }
+
+        final livestock = livestockProvider.getLivestockByFarm(selectedFarm.id);
+        final typeCount = <LivestockType, int>{};
+        
+        for (final animal in livestock) {
+          typeCount[animal.type] = (typeCount[animal.type] ?? 0) + 1;
+        }
+
+        if (typeCount.isEmpty) {
+          return Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  const Text(
+                    'สัดส่วนปศุสัตว์ตามประเภท',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    height: 200,
+                    child: const Center(
+                      child: Text('ยังไม่มีข้อมูลปศุสัตว์'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final sections = typeCount.entries.map((entry) {
+          return PieChartSectionData(
+            color: _getTypeColor(entry.key),
+            value: entry.value.toDouble(),
+            title: '${entry.value}',
+            radius: 60,
+            titleStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          );
+        }).toList();
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.pets,
-                  color: Theme.of(context).primaryColor,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'สรุปปศุสัตว์',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                const Text(
+                  'สัดส่วนปศุสัตว์ตามประเภท',
+                  style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Consumer2<LivestockProvider, FarmProvider>(
-              builder: (context, livestockProvider, farmProvider, child) {
-                if (farmProvider.selectedFarm == null) {
-                  return const Center(
-                    child: Text('กรุณาเลือกฟาร์ม'),
-                  );
-                }
-
-                final summary = livestockProvider.getLivestockSummary(
-                  farmProvider.selectedFarm!.id,
-                );
-
-                if (summary.isEmpty) {
-                  return const Center(
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.pets_outlined,
-                          size: 48,
-                          color: Colors.grey,
-                        ),
-                        SizedBox(height: 8),
-                        Text('ยังไม่มีข้อมูลปศุสัตว์'),
-                      ],
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 200,
+                  child: PieChart(
+                    PieChartData(
+                      sections: sections,
+                      centerSpaceRadius: 40,
+                      sectionsSpace: 2,
                     ),
-                  );
-                }
-
-                return Column(
-                  children: summary.entries.map((entry) {
-                    final type = entry.key;
-                    final count = entry.value;
-                    final color = _getColorForType(type);
-                    
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  children: typeCount.entries.map((entry) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 16, bottom: 8),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             width: 12,
                             height: 12,
-                            decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
+                            color: _getTypeColor(entry.key),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              type.displayName,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: color.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '$count ตัว',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: color,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
+                          const SizedBox(width: 4),
+                          Text(_getTypeDisplayName(entry.key)),
                         ],
                       ),
                     );
                   }).toList(),
-                );
-              },
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Color _getColorForType(LivestockType type) {
+  String _getTypeDisplayName(LivestockType type) {
+    switch (type) {
+      case LivestockType.cattle:
+        return 'โค';
+      case LivestockType.buffalo:
+        return 'ควาย';
+      case LivestockType.pig:
+        return 'หมู';
+      case LivestockType.chicken:
+        return 'ไก่';
+      case LivestockType.duck:
+        return 'เป็ด';
+      case LivestockType.goat:
+        return 'แพะ';
+      case LivestockType.sheep:
+        return 'แกะ';
+    }
+  }
+
+  Color _getTypeColor(LivestockType type) {
     switch (type) {
       case LivestockType.cattle:
         return Colors.brown;
-      case LivestockType.dairyCow:
-        return Colors.blue;
       case LivestockType.buffalo:
         return Colors.grey;
       case LivestockType.pig:
         return Colors.pink;
       case LivestockType.chicken:
-        return Colors.orange;
-      case LivestockType.duck:
         return Colors.yellow;
+      case LivestockType.duck:
+        return Colors.blue;
       case LivestockType.goat:
         return Colors.green;
       case LivestockType.sheep:
         return Colors.purple;
-      case LivestockType.quail:
-        return Colors.teal;
-      case LivestockType.dog:
-        return Colors.indigo;
-      case LivestockType.cat:
-        return Colors.cyan;
-      case LivestockType.other:
-        return Colors.red;
     }
   }
 }

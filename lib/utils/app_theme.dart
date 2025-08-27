@@ -52,10 +52,9 @@ class AppTheme {
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: Colors.white,
-          fontFamily: 'Sarabun',
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surfaceColor,
         elevation: 2,
         shape: RoundedRectangleBorder(
@@ -74,8 +73,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            fontFamily: 'Sarabun',
-          ),
+            ),
         ),
       ),
       textTheme: const TextTheme(
@@ -83,67 +81,56 @@ class AppTheme {
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
-          fontFamily: 'Sarabun',
         ),
         displayMedium: TextStyle(
           fontSize: 28,
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
-          fontFamily: 'Sarabun',
         ),
         displaySmall: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
-          fontFamily: 'Sarabun',
         ),
         headlineLarge: TextStyle(
           fontSize: 22,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
-          fontFamily: 'Sarabun',
         ),
         headlineMedium: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
-          fontFamily: 'Sarabun',
         ),
         headlineSmall: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
-          fontFamily: 'Sarabun',
         ),
         titleLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
-          fontFamily: 'Sarabun',
         ),
         titleMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: textPrimaryColor,
-          fontFamily: 'Sarabun',
         ),
         bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: textPrimaryColor,
-          fontFamily: 'Sarabun',
         ),
         bodyMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: textSecondaryColor,
-          fontFamily: 'Sarabun',
         ),
         bodySmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.normal,
           color: textSecondaryColor,
-          fontFamily: 'Sarabun',
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(

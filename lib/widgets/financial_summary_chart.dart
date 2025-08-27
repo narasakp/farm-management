@@ -65,6 +65,30 @@ class FinancialSummaryChart extends StatelessWidget {
 
                 return Column(
                   children: [
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'สรุปการเงิน',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              height: 200,
+                              child: const Center(
+                                child: Text('กราฟการเงิน (ใช้งานได้ในเวอร์ชันเต็ม)'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     // Income
                     _buildFinancialItem(
                       context,

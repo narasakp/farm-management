@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../providers/farm_provider.dart';
-import '../../providers/livestock_provider.dart';
-import '../../providers/financial_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/dashboard_card.dart';
-import '../../widgets/livestock_summary_chart.dart';
-import '../../widgets/financial_summary_chart.dart';
+import '../../providers/farm_provider.dart';
+import '../../providers/survey_provider.dart';
+import '../../providers/financial_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -27,49 +24,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadData() async {
-    final authProvider = context.read<AuthProvider>();
     final farmProvider = context.read<FarmProvider>();
-    
-    if (authProvider.currentUser != null) {
-      await farmProvider.loadFarms(authProvider.currentUser!.id);
-      
-      if (farmProvider.selectedFarm != null) {
-        await context.read<LivestockProvider>().loadLivestock(farmProvider.selectedFarm!.id);
-        await context.read<FinancialProvider>().loadFinancialRecords(farmProvider.selectedFarm!.id);
-      }
-    }
+    await farmProvider.loadSampleData();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = ResponsiveBreakpoints.of(context).equals(MOBILE);
-    final isTablet = ResponsiveBreakpoints.of(context).equals(TABLET);
-    
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('แดชบอร์ด'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              Provider.of<AuthProvider>(context, listen: false).logout();
+              context.go('/login');
+            },
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: _loadData,
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(isMobile ? 16 : 24),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               _buildHeader(),
               const SizedBox(height: 24),
-              
-              // Farm Selector
-              _buildFarmSelector(),
+              _buildQuickActions(),
               const SizedBox(height: 24),
-              
-              // Summary Cards
-              _buildSummaryCards(isMobile, isTablet),
+              _buildSummaryCards(),
               const SizedBox(height: 24),
-              
-              // Charts Section
-              _buildChartsSection(isMobile),
-              const SizedBox(height: 24),
-              
-              // Recent Activities
               _buildRecentActivities(),
             ],
           ),
@@ -81,15 +67,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildHeader() {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
-        final user = authProvider.currentUser;
         final now = DateTime.now();
-        final formatter = DateFormat('EEEE, d MMMM yyyy', 'th_TH');
+        final formatter = DateFormat('EEEE, d MMMM yyyy');
         
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'สวัสดี, ${user?.firstName ?? 'ผู้ใช้'}!',
+              'สวัสดี, เกษตรกร!',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -97,7 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Text(
               formatter.format(now),
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).textTheme.bodySmall?.color,
+                color: Colors.grey[600],
               ),
             ),
           ],
@@ -106,151 +91,167 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildFarmSelector() {
-    return Consumer<FarmProvider>(
-      builder: (context, farmProvider, child) {
-        if (farmProvider.farms.isEmpty) {
-          return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.agriculture_outlined,
-                    size: 48,
-                    color: Theme.of(context).textTheme.bodySmall?.color,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'ยังไม่มีฟาร์ม',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'เริ่มต้นด้วยการเพิ่มฟาร์มแรกของคุณ',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      // TODO: Navigate to add farm screen
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('เพิ่มฟาร์ม'),
-                  ),
-                ],
+  Widget _buildQuickActions() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'เมนูหลัก',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
             ),
-          );
-        }
-
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+            const SizedBox(height: 16),
+            GridView.count(
+              crossAxisCount: 3,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.1,
               children: [
-                Icon(
-                  Icons.agriculture,
-                  color: Theme.of(context).primaryColor,
+                _buildActionCard(
+                  '📋',
+                  'สำรวจปศุสัตว์',
+                  'แบบฟอร์มสำรวจดิจิทัล',
+                  () => context.go('/survey'),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ฟาร์มที่เลือก',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      DropdownButton<String>(
-                        value: farmProvider.selectedFarm?.id,
-                        isExpanded: true,
-                        underline: const SizedBox(),
-                        items: farmProvider.farms.map((farm) {
-                          return DropdownMenuItem(
-                            value: farm.id,
-                            child: Text(
-                              farm.name,
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (farmId) {
-                          final farm = farmProvider.farms.firstWhere((f) => f.id == farmId);
-                          farmProvider.selectFarm(farm);
-                          _loadData();
-                        },
-                      ),
-                    ],
-                  ),
+                _buildActionCard(
+                  '🐮',
+                  'จัดการปศุสัตว์',
+                  'บันทึกข้อมูลสัตว์',
+                  () => context.go('/livestock'),
+                ),
+                _buildActionCard(
+                  '💰',
+                  'การเงิน',
+                  'บันทึกรายรับ-รายจ่าย',
+                  () => context.go('/financial'),
+                ),
+                _buildActionCard(
+                  '🏪',
+                  'ตลาดออนไลน์',
+                  'ซื้อ-ขายปศุสัตว์',
+                  () => _showComingSoon(context, 'ตลาดออนไลน์'),
+                ),
+                _buildActionCard(
+                  '🚛',
+                  'ขนส่ง',
+                  'จองรถขนส่งสัตว์',
+                  () => _showComingSoon(context, 'ระบบขนส่ง'),
+                ),
+                _buildActionCard(
+                  '👥',
+                  'กลุ่มเกษตรกร',
+                  'จัดการกลุ่มชุมชน',
+                  () => _showComingSoon(context, 'กลุ่มเกษตรกร'),
                 ),
               ],
             ),
-          ),
-        );
-      },
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildSummaryCards(bool isMobile, bool isTablet) {
-    return Consumer3<FarmProvider, LivestockProvider, FinancialProvider>(
-      builder: (context, farmProvider, livestockProvider, financialProvider, child) {
-        if (farmProvider.selectedFarm == null) {
-          return const SizedBox();
-        }
+  Widget _buildActionCard(String emoji, String title, String subtitle, VoidCallback onTap) {
+    return Card(
+      elevation: 2,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                emoji,
+                style: const TextStyle(fontSize: 32),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-        final farmId = farmProvider.selectedFarm!.id;
-        final livestockSummary = livestockProvider.getLivestockSummary(farmId);
-        final totalAnimals = livestockSummary.values.fold(0, (sum, count) => sum + count);
-        final monthlyIncome = financialProvider.getTotalIncome(
-          farmId, 
-          DateTime.now().subtract(const Duration(days: 30)), 
-          DateTime.now(),
-        );
-        final monthlyExpense = financialProvider.getTotalExpense(
-          farmId, 
-          DateTime.now().subtract(const Duration(days: 30)), 
-          DateTime.now(),
-        );
-        final netProfit = monthlyIncome - monthlyExpense;
+  void _showComingSoon(BuildContext context, String featureName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('$featureName'),
+        content: const Text('ฟีเจอร์นี้กำลังพัฒนา\nจะเปิดใช้งานในเวอร์ชันถัดไป'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('ตกลง'),
+          ),
+        ],
+      ),
+    );
+  }
 
-        final crossAxisCount = isMobile ? 2 : (isTablet ? 3 : 4);
-        
+  Widget _buildSummaryCards() {
+    return Consumer2<FarmProvider, SurveyProvider>(
+      builder: (context, farmProvider, surveyProvider, child) {
+        final stats = surveyProvider.getSurveyStatistics();
         return GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: crossAxisCount,
+          crossAxisCount: 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: isMobile ? 1.2 : 1.5,
+          childAspectRatio: 1.5,
           children: [
-            DashboardCard(
-              title: 'จำนวนปศุสัตว์',
-              value: totalAnimals.toString(),
-              subtitle: 'ตัว',
-              icon: Icons.pets,
-              color: Colors.blue,
+            _buildSummaryCard(
+              'จำนวนปศุสัตว์',
+              '${stats['totalAnimals'] ?? farmProvider.totalAnimals}',
+              'ตัว',
+              Icons.pets,
+              Colors.blue,
             ),
-            DashboardCard(
-              title: 'รายได้เดือนนี้',
-              value: NumberFormat('#,##0').format(monthlyIncome),
-              subtitle: 'บาท',
-              icon: Icons.trending_up,
-              color: Colors.green,
+            _buildSummaryCard(
+              'ฟาร์มที่สำรวจ',
+              '${stats['totalFarmers'] ?? 0}',
+              'ฟาร์ม',
+              Icons.home_work,
+              Colors.orange,
             ),
-            DashboardCard(
-              title: 'รายจ่ายเดือนนี้',
-              value: NumberFormat('#,##0').format(monthlyExpense),
-              subtitle: 'บาท',
-              icon: Icons.trending_down,
-              color: Colors.orange,
+            _buildSummaryCard(
+              'รายได้รวม',
+              '฿${farmProvider.monthlyIncome.toStringAsFixed(0)}',
+              'บาท',
+              Icons.trending_up,
+              Colors.green,
             ),
-            DashboardCard(
-              title: 'กำไรสุทธิ',
-              value: NumberFormat('#,##0').format(netProfit),
-              subtitle: 'บาท',
-              icon: netProfit >= 0 ? Icons.attach_money : Icons.money_off,
-              color: netProfit >= 0 ? Colors.green : Colors.red,
+            _buildSummaryCard(
+              'กำไรสุทธิ',
+              '฿${farmProvider.netProfit.toStringAsFixed(0)}',
+              'บาท',
+              Icons.account_balance_wallet,
+              farmProvider.netProfit >= 0 ? Colors.green : Colors.red,
             ),
           ],
         );
@@ -258,31 +259,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildChartsSection(bool isMobile) {
-    return Consumer2<LivestockProvider, FinancialProvider>(
-      builder: (context, livestockProvider, financialProvider, child) {
-        return Column(
+  Widget _buildSummaryCard(String title, String value, String subtitle, IconData icon, Color color) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (isMobile) ...[
-              // Mobile: Stack charts vertically
-              const LivestockSummaryChart(),
-              const SizedBox(height: 16),
-              const FinancialSummaryChart(),
-            ] else ...[
-              // Desktop/Tablet: Side by side
-              Row(
-                children: [
-                  const Expanded(child: LivestockSummaryChart()),
-                  const SizedBox(width: 16),
-                  const Expanded(child: FinancialSummaryChart()),
-                ],
+            Icon(
+              icon,
+              size: 32,
+              color: color,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: color,
               ),
-            ],
+            ),
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
+
 
   Widget _buildRecentActivities() {
     return Card(

@@ -20,7 +20,7 @@
     body {
       margin: 0;
       padding: 0;
-      font-family: 'Sarabun', sans-serif;
+      font-family: sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
     .loading {
@@ -50,19 +50,6 @@
     <p style="margin-top: 20px;">กำลังโหลดระบบ...</p>
   </div>
   
-  <script>
-    window.addEventListener('load', function(ev) {
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
-          });
-        }
-      });
-    });
-  </script>
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
