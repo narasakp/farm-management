@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการฟาร์มปศุสัตว์</title>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .feature {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .status {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐄 ระบบจัดการฟาร์มปศุสัตว์</h1>
+        <div class="status">✅ Deployment สำเร็จ!</div>
+        
+        <p>ระบบจัดการฟาร์มปศุสัตว์ออนไลน์สำหรับเกษตรกรในจังหวัดชัยภูมิ</p>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>📊 แดชบอร์ด</h3>
+                <p>สรุปข้อมูลฟาร์มและปศุสัตว์</p>
+            </div>
+            <div class="feature">
+                <h3>🐮 จัดการปศุสัตว์</h3>
+                <p>บันทึกข้อมูลสุขภาพและการเจริญเติบโต</p>
+            </div>
+            <div class="feature">
+                <h3>💰 การเงิน</h3>
+                <p>ติดตามรายรับ-รายจ่าย</p>
+            </div>
+            <div class="feature">
+                <h3>📱 Responsive</h3>
+                <p>ใช้งานได้ทั้งมือถือและคอมพิวเตอร์</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <p><strong>ข้อมูลทดสอบ:</strong></p>
+            <p>เบอร์โทร: 0812345678</p>
+            <p>รหัสผ่าน: 123456</p>
+        </div>
+        
+        <div style="margin-top: 20px; font-size: 0.9em; opacity: 0.8;">
+            <p>🚀 Deployed with Vercel | 📱 Flutter Web App</p>
+            <p>Repository: <a href="https://github.com/narasakp/farm-management" style="color: #81C784;">narasakp/farm-management</a></p>
+        </div>
+    </div>
+</body>
+</html>
