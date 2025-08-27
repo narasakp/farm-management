@@ -12,17 +12,6 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  provider: ^6.0.5
-  http: ^1.1.0
-  shared_preferences: ^2.2.2
-  intl: ^0.18.1
-  flutter_localizations:
-    sdk: flutter
-  responsive_framework: ^1.1.1
-  flutter_svg: ^2.0.7
-  charts_flutter: ^0.12.0
-  file_picker: ^6.1.1
-  url_launcher: ^6.2.1
 
 dev_dependencies:
   flutter_test:
