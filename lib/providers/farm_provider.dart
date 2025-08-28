@@ -1,16 +1,38 @@
 import 'package:flutter/foundation.dart';
 
+class Farm {
+  final String id;
+  final String name;
+  final String location;
+  final int totalAnimals;
+  final double monthlyIncome;
+  final double monthlyExpense;
+  
+  Farm({
+    required this.id,
+    required this.name,
+    required this.location,
+    required this.totalAnimals,
+    required this.monthlyIncome,
+    required this.monthlyExpense,
+  });
+  
+  double get netProfit => monthlyIncome - monthlyExpense;
+}
+
 class FarmProvider with ChangeNotifier {
   int _totalAnimals = 0;
   double _monthlyIncome = 0;
   double _monthlyExpense = 0;
   bool _isLoading = false;
+  Farm? _selectedFarm;
 
   int get totalAnimals => _totalAnimals;
   double get monthlyIncome => _monthlyIncome;
   double get monthlyExpense => _monthlyExpense;
   double get netProfit => _monthlyIncome - _monthlyExpense;
   bool get isLoading => _isLoading;
+  Farm? get selectedFarm => _selectedFarm;
 
   Future<void> loadFarms(String ownerId) async {
     _isLoading = true;
@@ -24,6 +46,15 @@ class FarmProvider with ChangeNotifier {
       _totalAnimals = 125;
       _monthlyIncome = 45000;
       _monthlyExpense = 28000;
+      
+      _selectedFarm = Farm(
+        id: '1',
+        name: 'ฟาร์มตัวอย่าง',
+        location: 'จังหวัดนครราชสีมา',
+        totalAnimals: 125,
+        monthlyIncome: 45000,
+        monthlyExpense: 28000,
+      );
     } catch (e) {
       throw Exception('โหลดข้อมูลฟาร์มไม่สำเร็จ: ${e.toString()}');
     } finally {

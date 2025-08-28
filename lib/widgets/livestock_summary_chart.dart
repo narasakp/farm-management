@@ -101,7 +101,7 @@ class LivestockSummaryChart extends StatelessWidget {
                             color: _getTypeColor(entry.key),
                           ),
                           const SizedBox(width: 4),
-                          Text(_getTypeDisplayName(entry.key)),
+                          Text(_getTypeName(entry.key)),
                         ],
                       ),
                     );
@@ -115,41 +115,87 @@ class LivestockSummaryChart extends StatelessWidget {
     );
   }
 
-  String _getTypeDisplayName(LivestockType type) {
+  String _getTypeName(LivestockType type) {
     switch (type) {
-      case LivestockType.cattle:
+      case LivestockType.beefCattleLocal:
+      case LivestockType.beefCattlePurebred:
+      case LivestockType.beefCattleCrossbred:
+      case LivestockType.dairyCow:
         return 'โค';
-      case LivestockType.buffalo:
-        return 'ควาย';
-      case LivestockType.pig:
-        return 'หมู';
-      case LivestockType.chicken:
+      case LivestockType.buffaloLocal:
+      case LivestockType.buffaloDairy:
+        return 'กระบือ';
+      case LivestockType.pigLocal:
+      case LivestockType.pigBreeder:
+      case LivestockType.pigFattening:
+        return 'สุกร';
+      case LivestockType.chickenLocal:
+      case LivestockType.chickenCrossbred:
+      case LivestockType.chickenBroiler:
+      case LivestockType.chickenLayer:
+      case LivestockType.chickenBreederPS:
+      case LivestockType.chickenBreederGP:
         return 'ไก่';
-      case LivestockType.duck:
+      case LivestockType.duckMeat:
+      case LivestockType.duckEgg:
+      case LivestockType.duckField:
         return 'เป็ด';
-      case LivestockType.goat:
+      case LivestockType.goatMeat:
+      case LivestockType.goatDairy:
         return 'แพะ';
       case LivestockType.sheep:
         return 'แกะ';
+      case LivestockType.quailMeat:
+      case LivestockType.quailEgg:
+        return 'นกกระทา';
+      case LivestockType.dog:
+        return 'สุนัข';
+      case LivestockType.cat:
+        return 'แมว';
+      case LivestockType.other:
+        return 'อื่นๆ';
     }
   }
 
   Color _getTypeColor(LivestockType type) {
     switch (type) {
-      case LivestockType.cattle:
+      case LivestockType.beefCattleLocal:
+      case LivestockType.beefCattlePurebred:
+      case LivestockType.beefCattleCrossbred:
+      case LivestockType.dairyCow:
         return Colors.brown;
-      case LivestockType.buffalo:
+      case LivestockType.buffaloLocal:
+      case LivestockType.buffaloDairy:
         return Colors.grey;
-      case LivestockType.pig:
+      case LivestockType.pigLocal:
+      case LivestockType.pigBreeder:
+      case LivestockType.pigFattening:
         return Colors.pink;
-      case LivestockType.chicken:
+      case LivestockType.chickenLocal:
+      case LivestockType.chickenCrossbred:
+      case LivestockType.chickenBroiler:
+      case LivestockType.chickenLayer:
+      case LivestockType.chickenBreederPS:
+      case LivestockType.chickenBreederGP:
+        return Colors.orange;
+      case LivestockType.duckMeat:
+      case LivestockType.duckEgg:
+      case LivestockType.duckField:
         return Colors.yellow;
-      case LivestockType.duck:
-        return Colors.blue;
-      case LivestockType.goat:
+      case LivestockType.goatMeat:
+      case LivestockType.goatDairy:
         return Colors.green;
       case LivestockType.sheep:
         return Colors.purple;
+      case LivestockType.quailMeat:
+      case LivestockType.quailEgg:
+        return Colors.teal;
+      case LivestockType.dog:
+        return Colors.blue;
+      case LivestockType.cat:
+        return Colors.indigo;
+      case LivestockType.other:
+        return Colors.grey.shade400;
     }
   }
 }

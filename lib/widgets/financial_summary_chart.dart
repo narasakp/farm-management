@@ -43,11 +43,11 @@ class FinancialSummaryChart extends StatelessWidget {
                 final startDate = DateTime.now().subtract(const Duration(days: 30));
                 final endDate = DateTime.now();
                 
-                final totalIncome = financialProvider.getTotalIncome(farmId, startDate, endDate);
-                final totalExpense = financialProvider.getTotalExpense(farmId, startDate, endDate);
-                final netProfit = totalIncome - totalExpense;
+                final income = financialProvider.getTotalIncome(farmProvider.selectedFarm?.id ?? '');
+                final expense = financialProvider.getTotalExpense(farmProvider.selectedFarm?.id ?? '');
+                final netProfit = income - expense;
 
-                if (totalIncome == 0 && totalExpense == 0) {
+                if (income == 0 && expense == 0) {
                   return const Center(
                     child: Column(
                       children: [

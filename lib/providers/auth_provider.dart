@@ -1,12 +1,28 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+class User {
+  final String phoneNumber;
+  final String firstName;
+  final String lastName;
+  
+  User({
+    required this.phoneNumber,
+    required this.firstName,
+    required this.lastName,
+  });
+  
+  String get fullName => '$firstName $lastName';
+}
+
 class AuthProvider with ChangeNotifier {
   bool _isLoggedIn = false;
   bool _isLoading = false;
+  User? _currentUser;
 
   bool get isLoggedIn => _isLoggedIn;
   bool get isLoading => _isLoading;
+  User? get currentUser => _currentUser;
 
   String? _savedPhoneNumber;
   
@@ -39,6 +55,11 @@ class AuthProvider with ChangeNotifier {
       // For demo purposes, accept any phone number with password "123456"
       if (password == "123456") {
         _isLoggedIn = true;
+        _currentUser = User(
+          phoneNumber: phoneNumber,
+          firstName: 'เกษตรกร',
+          lastName: 'ตัวอย่าง',
+        );
 
         // Save to local storage
         final prefs = await SharedPreferences.getInstance();
@@ -69,6 +90,7 @@ class AuthProvider with ChangeNotifier {
       await prefs.remove('user_phone');
       
       _isLoggedIn = false;
+      _currentUser = null;
       notifyListeners();
     } catch (e) {
       debugPrint('Logout error: $e');
