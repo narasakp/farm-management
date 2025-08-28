@@ -1,11 +1,11 @@
 {
-    "name": "ระบบบริหารจัดการฟาร์มปศุสัตว์",
-    "short_name": "Farm Management",
+    "name": "livestock_farm_management",
+    "short_name": "livestock_farm_management",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#2F855A",
-    "theme_color": "#2F855A",
-    "description": "ระบบบริหารจัดการฟาร์มปศุสัตว์แบบครบวงจร",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
