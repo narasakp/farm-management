@@ -146,23 +146,27 @@
   </div>
 
   <script>
-    // Show Flutter app after 3 seconds
-    setTimeout(() => {
+    // Load Flutter app immediately in background
+    function loadFlutterApp() {
+      // Hide landing page and show Flutter container
       document.querySelector('.container').style.display = 'none';
       document.getElementById('flutter-app').style.display = 'block';
-      
-      // Trigger Flutter bootstrap
-      if (window._flutter && window._flutter.loader) {
-        window._flutter.loader.loadEntrypoint({
-          entrypointUrl: "main.dart.js",
-          onEntrypointLoaded: function(engineInitializer) {
-            engineInitializer.initializeEngine().then(function(appRunner) {
-              appRunner.runApp();
-            });
-          }
-        });
-      }
-    }, 3000);
+      document.body.innerHTML = `
+        <base href="/">
+        <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+        <meta name="description" content="Livestock Farm Management System">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <meta name="apple-mobile-web-app-title" content="livestock_farm_management">
+        <link rel="apple-touch-icon" href="icons/Icon-192.png">
+        <link rel="icon" type="image/png" href="favicon.png"/>
+        <link rel="manifest" href="manifest.json">
+        <script src="flutter_bootstrap.js" async><\/script>
+      `;
+    }
+
+    // Show Flutter app after 3 seconds
+    setTimeout(loadFlutterApp, 3000);
   </script>
 </body>
 </html>
