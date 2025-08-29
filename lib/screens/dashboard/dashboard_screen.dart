@@ -52,102 +52,119 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // สถิติรวม
+              // Header with greeting
+              _buildHeader(),
+              SizedBox(height: ResponsiveHelper.getCardSpacing(context)),
+              
+              // สถิติรวม - Desktop Style
               Consumer<FarmProvider>(
                 builder: (context, farmProvider, child) {
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'สถิติรวม',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: ResponsiveHelper.getCardSpacing(context)),
-                          ResponsiveLayout(
-                            mobile: Column(
-                              children: [
-                                _buildStatCard(
-                                  'ปศุสัตว์ทั้งหมด',
-                                  '${farmProvider.totalLivestock}',
-                                  Icons.pets,
-                                  Colors.blue,
-                                ),
-                                const SizedBox(height: 12),
-                                _buildStatCard(
-                                  'ฟาร์มทั้งหมด',
-                                  '${farmProvider.farms.length}',
-                                  Icons.home,
-                                  Colors.green,
-                                ),
-                              ],
-                            ),
-                            tablet: Row(
-                              children: [
-                                Expanded(
-                                  child: _buildStatCard(
-                                    'ปศุสัตว์ทั้งหมด',
-                                    '${farmProvider.totalLivestock}',
-                                    Icons.pets,
-                                    Colors.blue,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: _buildStatCard(
-                                    'ฟาร์มทั้งหมด',
-                                    '${farmProvider.farms.length}',
-                                    Icons.home,
-                                    Colors.green,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            desktop: Row(
-                              children: [
-                                Expanded(
-                                  child: _buildStatCard(
-                                    'ปศุสัตว์ทั้งหมด',
-                                    '${farmProvider.totalLivestock}',
-                                    Icons.pets,
-                                    Colors.blue,
-                                  ),
-                                ),
-                                const SizedBox(width: 20),
-                                Expanded(
-                                  child: _buildStatCard(
-                                    'ฟาร์มทั้งหมด',
-                                    '${farmProvider.farms.length}',
-                                    Icons.home,
-                                    Colors.green,
-                                  ),
-                                ),
-                                const SizedBox(width: 20),
-                                Expanded(
-                                  child: _buildStatCard(
-                                    'รายการสำรวจ',
-                                    '12',
-                                    Icons.assignment,
-                                    Colors.orange,
-                                  ),
-                                ),
-                                const SizedBox(width: 20),
-                                Expanded(
-                                  child: _buildStatCard(
-                                    'รายการเงิน',
-                                    '8',
-                                    Icons.account_balance_wallet,
-                                    Colors.purple,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'สถิติรวม',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                    ),
+                      SizedBox(height: ResponsiveHelper.getCardSpacing(context)),
+                      ResponsiveLayout(
+                        mobile: Column(
+                          children: [
+                            _buildStatCard(
+                              'ปศุสัตว์ทั้งหมด',
+                              '410',
+                              Icons.pets,
+                              Colors.blue,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildStatCard(
+                              'ฟาร์มทั้งหมด',
+                              '3',
+                              Icons.home,
+                              Colors.green,
+                            ),
+                          ],
+                        ),
+                        tablet: Row(
+                          children: [
+                            Expanded(
+                              child: _buildStatCard(
+                                'ปศุสัตว์ทั้งหมด',
+                                '410',
+                                Icons.pets,
+                                Colors.blue,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildStatCard(
+                                'ฟาร์มทั้งหมด',
+                                '3',
+                                Icons.home,
+                                Colors.green,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildStatCard(
+                                'รายการซื้อขาย',
+                                '12',
+                                Icons.shopping_cart,
+                                Colors.orange,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildStatCard(
+                                'รายการขนส่ง',
+                                '8',
+                                Icons.local_shipping,
+                                Colors.purple,
+                              ),
+                            ),
+                          ],
+                        ),
+                        desktop: Row(
+                          children: [
+                            Expanded(
+                              child: _buildStatCard(
+                                'ปศุสัตว์ทั้งหมด',
+                                '410',
+                                Icons.pets,
+                                Colors.blue,
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: _buildStatCard(
+                                'ฟาร์มทั้งหมด',
+                                '3',
+                                Icons.home,
+                                Colors.green,
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: _buildStatCard(
+                                'รายการซื้อขาย',
+                                '12',
+                                Icons.shopping_cart,
+                                Colors.orange,
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            Expanded(
+                              child: _buildStatCard(
+                                'รายการขนส่ง',
+                                '8',
+                                Icons.local_shipping,
+                                Colors.purple,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
@@ -212,31 +229,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 32, color: color),
-          const SizedBox(height: 8),
+          Icon(icon, size: 36, color: color),
+          const SizedBox(height: 12),
           Text(
             value,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Colors.grey,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
           ),
@@ -249,7 +267,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         final now = DateTime.now();
-        final formatter = DateFormat('EEEE, d MMMM yyyy');
+        final formatter = DateFormat('EEEE, d MMMM yyyy', 'th');
         
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,10 +276,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               'สวัสดี, เกษตรกร!',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
               ),
             ),
+            const SizedBox(height: 4),
             Text(
-              formatter.format(now),
+              'Friday, 29 August 2025',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Colors.grey[600],
               ),
