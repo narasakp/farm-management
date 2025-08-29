@@ -7,6 +7,7 @@ import 'providers/financial_provider.dart';
 import 'providers/survey_provider.dart';
 import 'providers/trading_provider.dart';
 import 'providers/transport_provider.dart';
+import 'providers/farmer_group_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/farm/livestock_screen.dart';
@@ -14,6 +15,7 @@ import 'screens/financial_screen.dart';
 import 'screens/survey/livestock_survey_screen.dart';
 import 'screens/trading/market_screen.dart';
 import 'screens/transport/transport_screen.dart';
+import 'screens/farmer_group/farmer_group_screen.dart';
 import 'utils/app_theme.dart';
 
 void main() {
@@ -33,6 +35,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SurveyProvider()),
         ChangeNotifierProvider(create: (_) => TradingProvider()),
         ChangeNotifierProvider(create: (_) => TransportProvider()),
+        ChangeNotifierProvider(create: (_) => FarmerGroupProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
@@ -77,6 +80,10 @@ class MyApp extends StatelessWidget {
         GoRoute(
           path: '/transport',
           builder: (context, state) => const TransportScreen(),
+        ),
+        GoRoute(
+          path: '/farmer-group',
+          builder: (context, state) => const FarmerGroupScreen(),
         ),
       ],
       redirect: (context, state) {

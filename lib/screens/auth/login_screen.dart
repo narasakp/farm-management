@@ -139,6 +139,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 32),
                         TextFormField(
                           controller: _phoneController,
+                          autofocus: false,
+                          enableInteractiveSelection: true,
                           decoration: InputDecoration(
                             labelText: 'เบอร์โทรศัพท์',
                             hintText: 'กรอกเบอร์โทรศัพท์',
@@ -146,8 +148,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            filled: true,
+                            fillColor: Colors.white,
                           ),
                           keyboardType: TextInputType.phone,
+                          textInputAction: TextInputAction.next,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'กรุณากรอกเบอร์โทรศัพท์';
@@ -162,6 +167,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
+                          autofocus: false,
+                          enableInteractiveSelection: true,
                           decoration: InputDecoration(
                             labelText: 'รหัสผ่าน',
                             prefixIcon: const Icon(Icons.lock),
@@ -178,13 +185,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            filled: true,
+                            fillColor: Colors.white,
                           ),
+                          textInputAction: TextInputAction.done,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'กรุณากรอกรหัสผ่าน';
                             }
                             return null;
                           },
+                          onFieldSubmitted: (_) => _login(),
                         ),
                         const SizedBox(height: 24),
                         SizedBox(

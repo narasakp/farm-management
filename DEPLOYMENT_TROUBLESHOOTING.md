@@ -1,11 +1,11 @@
-# Flutter Web GitHub Pages Deployment - บันทึกประสบการณ์และการแก้ไข
+# Flutter Web Development & Deployment - บันทึกประสบการณ์และการแก้ไข
 
 ## 📋 ข้อมูลโครงการ
 - **โครงการ:** ระบบจัดการฟาร์มปศุสัตว์ (Livestock Farm Management System)
 - **เทคโนโลยี:** Flutter Web 3.35.2
 - **Repository:** https://github.com/narasakp/farm-management
 - **URL:** https://narasakp.github.io/farm-management/
-- **วันที่:** 28 สิงหาคม 2025
+- **วันที่อัปเดต:** 29 สิงหาคม 2025
 
 ## ⚠️ ปัญหาที่พบ
 
@@ -170,6 +170,130 @@ jobs:
 # สำหรับ repository ชื่อ [repo-name]
 flutter build web --release --base-href "/[repo-name]/"
 ```
+
+## 🔧 ปัญหาการพัฒนา Local Development (29 สิงหาคม 2025)
+
+### ปัญหา 1: โค้ดอัปเดตไม่แสดงผลในเบราว์เซอร์
+**อาการ:** แก้ไขโค้ด Dashboard แล้วแต่เบราว์เซอร์ยังแสดงเวอร์ชันเก่า
+
+**สาเหตุหลัก:**
+1. **Index.html Base Href ผิด:** `<base href="/farm-management/">` แทนที่จะเป็น `<base href="/">`
+2. **Flutter Build Web ไม่สมบูรณ์:** ไฟล์ `main.dart.js` หายไป
+3. **Browser Cache:** เบราว์เซอร์ cache เวอร์ชันเก่า
+4. **Development vs Production Mode:** ใช้ static build แทน development server
+
+**วิธีแก้ไข:**
+```bash
+# 1. แก้ไข index.html
+<base href="/">
+
+# 2. ใช้ Development Server แทน Static Build
+flutter run -d web-server --web-port 8086 --web-hostname 0.0.0.0
+
+# 3. หรือใช้ Production Build + Python Server
+flutter build web --release
+python -m http.server 8086 --directory build\web
+```
+
+### ปัญหา 2: Compilation Errors ในโมเดล
+**อาการ:** Flutter compilation ล้มเหลวด้วย type errors
+
+**Errors ที่พบ:**
+```dart
+// ❌ MarketBooking constructor
+timeSlot: selectedTimeSlot,  // ไม่มี parameter นี้
+
+// ❌ TransportVehicle constructor  
+// ขาด required parameter 'updatedAt'
+
+// ❌ TransportBooking constructor
+notes: notesController.text,  // ควรเป็น specialInstructions
+items: ['ปศุสัตว์'],         // ควรเป็น List<TransportItem>
+
+// ❌ TransportProvider
+bookTransport() method ไม่มี
+```
+
+**การแก้ไข:**
+```dart
+// ✅ MarketBooking - แก้ไข parameters
+MarketBooking(
+  livestockType: 'โค',
+  quantity: int.parse(livestockCountController.text),
+  // ลบ timeSlot parameter
+)
+
+// ✅ TransportVehicle - เพิ่ม updatedAt
+TransportVehicle(
+  // ... other parameters
+  createdAt: DateTime.now(),
+  updatedAt: DateTime.now(),  // เพิ่มบรรทัดนี้
+)
+
+// ✅ TransportBooking - แก้ไข parameters
+TransportBooking(
+  items: [
+    TransportItem(
+      livestockId: 'livestock_${DateTime.now().millisecondsSinceEpoch}',
+      animalType: 'ปศุสัตว์',
+      quantity: int.parse(animalCountController.text),
+      weight: double.parse(totalWeightController.text),
+    ),
+  ],
+  specialInstructions: notesController.text.isNotEmpty ? notesController.text : null,
+  scheduledTime: selectedTime != null ? DateTime.tryParse('2024-01-01 $selectedTime:00') : null,
+)
+
+// ✅ TransportProvider - เพิ่ม method
+Future<void> bookTransport(TransportBooking booking) async {
+  await createBooking(booking);
+}
+```
+
+### ปัญหา 3: Flutter Debug Service Loop
+**อาการ:** CMD แสดง error loop ไม่หยุด, เบราว์เซอร์เข้าไม่ได้
+
+**Error Messages:**
+```
+DebugService: Error serving requestsError: Unsupported operation: Cannot send Null
+Another exception was thrown: setState() or markNeedsBuild() called during build.
+```
+
+**วิธีแก้ไข:**
+```bash
+# 1. Kill Chrome processes
+taskkill /F /IM chrome.exe
+
+# 2. Kill Dart processes  
+tasklist /FI "IMAGENAME eq dart.exe"
+taskkill /F /IM dart.exe
+
+# 3. ใช้ Production Build แทน Debug Mode
+flutter build web --release
+python -m http.server 8086 --directory build\web
+```
+
+## 📊 สรุปปัญหาและวิธีแก้ไข
+
+| ปัญหา | สาเหตุ | วิธีแก้ไข | เวลาที่ใช้ |
+|-------|--------|-----------|-----------|
+| โค้ดไม่อัปเดต | Base href ผิด, Cache | แก้ index.html, ใช้ dev server | 2 ชั่วโมง |
+| Compilation Error | Model constructor ผิด | แก้ไข parameters ทั้งหมด | 1 ชั่วโมง |
+| Debug Service Loop | Flutter debug mode bug | ใช้ production build | 30 นาที |
+
+## 🎯 Best Practices ที่ได้เรียนรู้
+
+### สำหรับ Local Development:
+1. **ใช้ Development Server:** `flutter run -d web-server` แทน static build
+2. **ตรวจสอบ Base Href:** ใช้ `"/"` สำหรับ local, `"/repo-name/"` สำหรับ GitHub Pages  
+3. **แก้ไข Compilation Errors ทันที:** อย่าปล่อยให้ debug service loop
+4. **Kill Processes เมื่อติดขัด:** Chrome และ Dart processes
+
+### สำหรับ Model Development:
+1. **ตรวจสอบ Constructor Parameters:** ให้ตรงกับ model definition
+2. **ใช้ Required Parameters:** เพิ่ม `updatedAt`, `createdAt` ให้ครบ
+3. **Type Safety:** ใช้ `List<TransportItem>` แทน `List<String>`
+4. **Method Completeness:** เพิ่ม missing methods ใน Provider
 
 ---
 **หมายเหตุ:** เอกสารนี้จัดทำขึ้นเพื่อบันทึกประสบการณ์และป้องกันปัญหาซ้ำในอนาคต

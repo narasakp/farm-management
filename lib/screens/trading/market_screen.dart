@@ -518,15 +518,118 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
   }
 
   void _showCreateListingDialog() {
+    final formKey = GlobalKey<FormState>();
+    final priceController = TextEditingController();
+    final minPriceController = TextEditingController();
+    final descriptionController = TextEditingController();
+    String selectedLivestock = 'cattle001';
+    bool isNegotiable = true;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('สร้างประกาศขาย'),
-        content: const Text('ฟีเจอร์นี้กำลังพัฒนา'),
+        content: SizedBox(
+          width: 400,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: selectedLivestock,
+                  decoration: const InputDecoration(
+                    labelText: 'เลือกปศุสัตว์',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'cattle001', child: Text('โค #001')),
+                    DropdownMenuItem(value: 'cattle002', child: Text('โค #002')),
+                    DropdownMenuItem(value: 'pig001', child: Text('สุกร #001')),
+                    DropdownMenuItem(value: 'chicken001', child: Text('ไก่ #001')),
+                  ],
+                  onChanged: (value) => selectedLivestock = value!,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: priceController,
+                  decoration: const InputDecoration(
+                    labelText: 'ราคาขาย (บาท)',
+                    border: OutlineInputBorder(),
+                    prefixText: '฿ ',
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value?.isEmpty ?? true) return 'กรุณาใส่ราคา';
+                    if (double.tryParse(value!) == null) return 'กรุณาใส่ตัวเลข';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: minPriceController,
+                  decoration: const InputDecoration(
+                    labelText: 'ราคาต่ำสุด (บาท)',
+                    border: OutlineInputBorder(),
+                    prefixText: '฿ ',
+                    hintText: 'ถ้าต่อรองได้',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'รายละเอียด',
+                    border: OutlineInputBorder(),
+                    hintText: 'อธิบายเพิ่มเติมเกี่ยวกับปศุสัตว์',
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  title: const Text('ต่อรองราคาได้'),
+                  value: isNegotiable,
+                  onChanged: (value) => isNegotiable = value ?? false,
+                ),
+              ],
+            ),
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('ตกลง'),
+            child: const Text('ยกเลิก'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                final listing = MarketListing(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  farmId: 'current_user_farm',
+                  livestockId: selectedLivestock,
+                  askingPrice: double.parse(priceController.text),
+                  minPrice: minPriceController.text.isNotEmpty 
+                      ? double.parse(minPriceController.text) 
+                      : null,
+                  description: descriptionController.text.isNotEmpty 
+                      ? descriptionController.text 
+                      : null,
+                  isNegotiable: isNegotiable,
+                  listedDate: DateTime.now(),
+                  status: 'active',
+                  viewCount: 0,
+                  createdAt: DateTime.now(),
+                );
+                
+                context.read<TradingProvider>().createListing(listing);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('สร้างประกาศเรียบร้อยแล้ว')),
+                );
+              }
+            },
+            child: const Text('สร้างประกาศ'),
           ),
         ],
       ),
@@ -573,11 +676,54 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('ติดต่อผู้ขาย'),
-        content: const Text('ฟีเจอร์นี้กำลังพัฒนา'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('ข้อมูลติดต่อผู้ขาย:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.person, size: 20, color: Colors.grey),
+                const SizedBox(width: 8),
+                const Text('นายสมชาย ใจดี'),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.phone, size: 20, color: Colors.green),
+                const SizedBox(width: 8),
+                const Text('044-123-456'),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.location_on, size: 20, color: Colors.red),
+                const SizedBox(width: 8),
+                const Text('บ้านเลขที่ 123 ต.เนินสง่า อ.เนินสง่า จ.ชัยภูมิ'),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text('หมายเหตุ: กรุณาติดต่อในเวลา 08:00-18:00 น.', 
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('ตกลง'),
+            child: const Text('ปิด'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('เปิดแอปโทรศัพท์')),
+              );
+            },
+            icon: const Icon(Icons.phone),
+            label: const Text('โทร'),
           ),
         ],
       ),
@@ -585,28 +731,217 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
   }
 
   void _showBookingDialog(LivestockMarket market) {
+    final formKey = GlobalKey<FormState>();
+    final livestockCountController = TextEditingController();
+    final notesController = TextEditingController();
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
+    String selectedTimeSlot = '06:00-08:00';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text('จองคิว ${market.name}'),
+          content: SizedBox(
+            width: 400,
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.calendar_today),
+                    title: Text('วันที่: ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'),
+                    trailing: const Icon(Icons.arrow_forward_ios),
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 30)),
+                      );
+                      if (date != null) {
+                        setState(() => selectedDate = date);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: selectedTimeSlot,
+                    decoration: const InputDecoration(
+                      labelText: 'ช่วงเวลา',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: '06:00-08:00', child: Text('06:00-08:00')),
+                      DropdownMenuItem(value: '08:00-10:00', child: Text('08:00-10:00')),
+                      DropdownMenuItem(value: '10:00-12:00', child: Text('10:00-12:00')),
+                    ],
+                    onChanged: (value) => selectedTimeSlot = value!,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: livestockCountController,
+                    decoration: const InputDecoration(
+                      labelText: 'จำนวนปศุสัตว์',
+                      border: OutlineInputBorder(),
+                      suffixText: 'ตัว',
+                    ),
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value?.isEmpty ?? true) return 'กรุณาใส่จำนวน';
+                      if (int.tryParse(value!) == null) return 'กรุณาใส่ตัวเลข';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: notesController,
+                    decoration: const InputDecoration(
+                      labelText: 'หมายเหตุ',
+                      border: OutlineInputBorder(),
+                      hintText: 'ข้อมูลเพิ่มเติม (ถ้ามี)',
+                    ),
+                    maxLines: 2,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('ยกเลิก'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  final booking = MarketBooking(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    farmId: 'current_user_farm',
+                    marketId: market.id,
+                    bookingDate: selectedDate,
+                    livestockType: 'โค',
+                    quantity: int.parse(livestockCountController.text),
+                    notes: notesController.text.isNotEmpty ? notesController.text : null,
+                    status: 'confirmed',
+                    createdAt: DateTime.now(),
+                  );
+                  
+                  context.read<TradingProvider>().bookMarketQueue(booking);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('จองคิวเรียบร้อยแล้ว')),
+                  );
+                }
+              },
+              child: const Text('จองคิว'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _editListing(MarketListing listing) {
+    final formKey = GlobalKey<FormState>();
+    final priceController = TextEditingController(text: listing.askingPrice.toString());
+    final minPriceController = TextEditingController(text: listing.minPrice?.toString() ?? '');
+    final descriptionController = TextEditingController(text: listing.description ?? '');
+    bool isNegotiable = listing.isNegotiable;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('จองคิว ${market.name}'),
-        content: const Text('ฟีเจอร์นี้กำลังพัฒนา'),
+        title: const Text('แก้ไขประกาศขาย'),
+        content: SizedBox(
+          width: 400,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: priceController,
+                  decoration: const InputDecoration(
+                    labelText: 'ราคาขาย (บาท)',
+                    border: OutlineInputBorder(),
+                    prefixText: '฿ ',
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value?.isEmpty ?? true) return 'กรุณาใส่ราคา';
+                    if (double.tryParse(value!) == null) return 'กรุณาใส่ตัวเลข';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: minPriceController,
+                  decoration: const InputDecoration(
+                    labelText: 'ราคาต่ำสุด (บาท)',
+                    border: OutlineInputBorder(),
+                    prefixText: '฿ ',
+                    hintText: 'ถ้าต่อรองได้',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'รายละเอียด',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  title: const Text('ต่อรองราคาได้'),
+                  value: isNegotiable,
+                  onChanged: (value) => isNegotiable = value ?? false,
+                ),
+              ],
+            ),
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('ยกเลิก'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('จองคิว'),
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                final updatedListing = MarketListing(
+                  id: listing.id,
+                  farmId: listing.farmId,
+                  livestockId: listing.livestockId,
+                  askingPrice: double.parse(priceController.text),
+                  minPrice: minPriceController.text.isNotEmpty 
+                      ? double.parse(minPriceController.text) 
+                      : null,
+                  description: descriptionController.text.isNotEmpty 
+                      ? descriptionController.text 
+                      : null,
+                  isNegotiable: isNegotiable,
+                  listedDate: listing.listedDate,
+                  status: listing.status,
+                  viewCount: listing.viewCount,
+                  createdAt: listing.createdAt,
+                );
+                
+                context.read<TradingProvider>().updateListing(updatedListing);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('แก้ไขประกาศเรียบร้อยแล้ว')),
+                );
+              }
+            },
+            child: const Text('บันทึก'),
           ),
         ],
       ),
-    );
-  }
-
-  void _editListing(MarketListing listing) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('ฟีเจอร์แก้ไขประกาศกำลังพัฒนา')),
     );
   }
 

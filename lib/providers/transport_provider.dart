@@ -234,6 +234,10 @@ class TransportProvider with ChangeNotifier {
     }
   }
 
+  Future<void> bookTransport(TransportBooking booking) async {
+    await createBooking(booking);
+  }
+
   Future<void> updateBookingStatus(String bookingId, String status) async {
     final index = _bookings.indexWhere((b) => b.id == bookingId);
     if (index != -1) {

@@ -414,44 +414,657 @@ class _TransportScreenState extends State<TransportScreen> with TickerProviderSt
   }
 
   void _showAddVehicleDialog() {
+    final formKey = GlobalKey<FormState>();
+    final licensePlateController = TextEditingController();
+    final brandController = TextEditingController();
+    final modelController = TextEditingController();
+    final driverNameController = TextEditingController();
+    final driverPhoneController = TextEditingController();
+    final maxWeightController = TextEditingController();
+    final maxAnimalsController = TextEditingController();
+    final pricePerKmController = TextEditingController();
+    final pricePerAnimalController = TextEditingController();
+    
+    String vehicleType = 'truck';
+    List<String> selectedAnimalTypes = ['cattle'];
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('เพิ่มรถขนส่ง'),
-        content: const Text('ฟีเจอร์นี้กำลังพัฒนา'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('ตกลง'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('เพิ่มรถขนส่ง'),
+          content: SizedBox(
+            width: 500,
+            height: 600,
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: vehicleType,
+                      decoration: const InputDecoration(
+                        labelText: 'ประเภทรถ',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'truck', child: Text('รถบรรทุก')),
+                        DropdownMenuItem(value: 'trailer', child: Text('รถพ่วง')),
+                        DropdownMenuItem(value: 'pickup', child: Text('รถกระบะ')),
+                      ],
+                      onChanged: (value) => setState(() => vehicleType = value!),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: licensePlateController,
+                      decoration: const InputDecoration(
+                        labelText: 'ทะเบียนรถ',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) => value?.isEmpty ?? true ? 'กรุณาใส่ทะเบียนรถ' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: brandController,
+                            decoration: const InputDecoration(
+                              labelText: 'ยี่ห้อ',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            controller: modelController,
+                            decoration: const InputDecoration(
+                              labelText: 'รุ่น',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: driverNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'ชื่อคนขับ',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) => value?.isEmpty ?? true ? 'กรุณาใส่ชื่อคนขับ' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: driverPhoneController,
+                      decoration: const InputDecoration(
+                        labelText: 'เบอร์โทรคนขับ',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) => value?.isEmpty ?? true ? 'กรุณาใส่เบอร์โทร' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: maxWeightController,
+                            decoration: const InputDecoration(
+                              labelText: 'น้ำหนักสูงสุด (กก.)',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value?.isEmpty ?? true) return 'กรุณาใส่น้ำหนัก';
+                              if (double.tryParse(value!) == null) return 'กรุณาใส่ตัวเลข';
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            controller: maxAnimalsController,
+                            decoration: const InputDecoration(
+                              labelText: 'จำนวนสูงสุด (ตัว)',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value?.isEmpty ?? true) return 'กรุณาใส่จำนวน';
+                              if (int.tryParse(value!) == null) return 'กรุณาใส่ตัวเลข';
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: pricePerKmController,
+                            decoration: const InputDecoration(
+                              labelText: 'ราคา/กม. (บาท)',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value?.isEmpty ?? true) return 'กรุณาใส่ราคา';
+                              if (double.tryParse(value!) == null) return 'กรุณาใส่ตัวเลข';
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            controller: pricePerAnimalController,
+                            decoration: const InputDecoration(
+                              labelText: 'ราคา/ตัว (บาท)',
+                              border: OutlineInputBorder(),
+                              hintText: 'ถ้ามี',
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('ประเภทสัตว์ที่รับขนส่ง:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Wrap(
+                      children: ['cattle', 'buffalo', 'pig', 'chicken', 'duck', 'goat', 'sheep']
+                          .map((type) => CheckboxListTile(
+                                title: Text(_getAnimalTypeDisplayName(type)),
+                                value: selectedAnimalTypes.contains(type),
+                                onChanged: (checked) {
+                                  setState(() {
+                                    if (checked == true) {
+                                      selectedAnimalTypes.add(type);
+                                    } else {
+                                      selectedAnimalTypes.remove(type);
+                                    }
+                                  });
+                                },
+                                dense: true,
+                              ))
+                          .toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('ยกเลิก'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState!.validate() && selectedAnimalTypes.isNotEmpty) {
+                  final vehicle = TransportVehicle(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    ownerId: 'current_user_farm',
+                    vehicleType: vehicleType,
+                    licensePlate: licensePlateController.text,
+                    brand: brandController.text.isNotEmpty ? brandController.text : null,
+                    model: modelController.text.isNotEmpty ? modelController.text : null,
+                    driverName: driverNameController.text,
+                    driverPhone: driverPhoneController.text,
+                    maxCapacityWeight: double.parse(maxWeightController.text),
+                    maxCapacityAnimals: int.parse(maxAnimalsController.text),
+                    pricePerKm: double.parse(pricePerKmController.text),
+                    pricePerAnimal: pricePerAnimalController.text.isNotEmpty 
+                        ? double.parse(pricePerAnimalController.text) 
+                        : null,
+                    suitableAnimalTypes: selectedAnimalTypes,
+                    isActive: true,
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  );
+                  
+                  context.read<TransportProvider>().addVehicle(vehicle);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('เพิ่มรถขนส่งเรียบร้อยแล้ว')),
+                  );
+                }
+              },
+              child: const Text('เพิ่ม'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _showBookingDialog(TransportVehicle vehicle) {
+    final formKey = GlobalKey<FormState>();
+    final pickupController = TextEditingController();
+    final deliveryController = TextEditingController();
+    final animalCountController = TextEditingController();
+    final totalWeightController = TextEditingController();
+    final notesController = TextEditingController();
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
+    String selectedTime = '08:00';
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('จองรถ ${vehicle.licensePlate}'),
-        content: const Text('ฟีเจอร์นี้กำลังพัฒนา'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('ยกเลิก'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text('จองรถ ${vehicle.licensePlate}'),
+          content: SizedBox(
+            width: 400,
+            height: 500,
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: pickupController,
+                      decoration: const InputDecoration(
+                        labelText: 'จุดรับ',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.location_on),
+                      ),
+                      validator: (value) => value?.isEmpty ?? true ? 'กรุณาใส่จุดรับ' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: deliveryController,
+                      decoration: const InputDecoration(
+                        labelText: 'จุดส่ง',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.flag),
+                      ),
+                      validator: (value) => value?.isEmpty ?? true ? 'กรุณาใส่จุดส่ง' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    ListTile(
+                      leading: const Icon(Icons.calendar_today),
+                      title: Text('วันที่: ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'),
+                      trailing: const Icon(Icons.arrow_forward_ios),
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 30)),
+                        );
+                        if (date != null) {
+                          setState(() => selectedDate = date);
+                        }
+                      },
+                    ),
+                    DropdownButtonFormField<String>(
+                      value: selectedTime,
+                      decoration: const InputDecoration(
+                        labelText: 'เวลา',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: '06:00', child: Text('06:00')),
+                        DropdownMenuItem(value: '08:00', child: Text('08:00')),
+                        DropdownMenuItem(value: '10:00', child: Text('10:00')),
+                        DropdownMenuItem(value: '14:00', child: Text('14:00')),
+                        DropdownMenuItem(value: '16:00', child: Text('16:00')),
+                      ],
+                      onChanged: (value) => selectedTime = value!,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: animalCountController,
+                            decoration: const InputDecoration(
+                              labelText: 'จำนวนสัตว์',
+                              border: OutlineInputBorder(),
+                              suffixText: 'ตัว',
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value?.isEmpty ?? true) return 'กรุณาใส่จำนวน';
+                              final count = int.tryParse(value!);
+                              if (count == null) return 'กรุณาใส่ตัวเลข';
+                              if (count > vehicle.maxCapacityAnimals) return 'เกินจำนวนที่รับได้';
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            controller: totalWeightController,
+                            decoration: const InputDecoration(
+                              labelText: 'น้ำหนักรวม',
+                              border: OutlineInputBorder(),
+                              suffixText: 'กก.',
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value?.isEmpty ?? true) return 'กรุณาใส่น้ำหนัก';
+                              final weight = double.tryParse(value!);
+                              if (weight == null) return 'กรุณาใส่ตัวเลข';
+                              if (weight > vehicle.maxCapacityWeight) return 'เกินน้ำหนักที่รับได้';
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: notesController,
+                      decoration: const InputDecoration(
+                        labelText: 'หมายเหตุ',
+                        border: OutlineInputBorder(),
+                        hintText: 'ข้อมูลเพิ่มเติม (ถ้ามี)',
+                      ),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Column(
+                        children: [
+                          Text('ค่าประมาณ: ฿${(50 * vehicle.pricePerKm).toStringAsFixed(0)}', 
+                               style: const TextStyle(fontWeight: FontWeight.bold)),
+                          const Text('(ระยะทางประมาณ 50 กม.)', style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('จอง'),
-          ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('ยกเลิก'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  final booking = TransportBooking(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    farmId: 'current_user_farm',
+                    vehicleId: vehicle.id,
+                    pickupLocation: pickupController.text,
+                    deliveryLocation: deliveryController.text,
+                    scheduledDate: selectedDate,
+                    scheduledTime: selectedTime != null ? DateTime.tryParse('2024-01-01 $selectedTime:00') : null,
+                    items: [
+                      TransportItem(
+                        livestockId: 'livestock_${DateTime.now().millisecondsSinceEpoch}',
+                        animalType: 'ปศุสัตว์',
+                        quantity: int.parse(animalCountController.text),
+                        weight: double.parse(totalWeightController.text),
+                        notes: notesController.text.isNotEmpty ? notesController.text : null,
+                      ),
+                    ],
+                    totalWeight: double.parse(totalWeightController.text),
+                    totalAnimals: int.parse(animalCountController.text),
+                    estimatedDistance: 50.0,
+                    estimatedCost: 50 * vehicle.pricePerKm,
+                    status: 'pending',
+                    specialInstructions: notesController.text.isNotEmpty ? notesController.text : null,
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  );
+                  
+                  context.read<TransportProvider>().bookTransport(booking);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('จองรถขนส่งเรียบร้อยแล้ว')),
+                  );
+                }
+              },
+              child: const Text('จอง'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _editVehicle(TransportVehicle vehicle) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('ฟีเจอร์แก้ไขรถขนส่งกำลังพัฒนา')),
+    final formKey = GlobalKey<FormState>();
+    final licensePlateController = TextEditingController(text: vehicle.licensePlate);
+    final brandController = TextEditingController(text: vehicle.brand ?? '');
+    final modelController = TextEditingController(text: vehicle.model ?? '');
+    final driverNameController = TextEditingController(text: vehicle.driverName);
+    final driverPhoneController = TextEditingController(text: vehicle.driverPhone);
+    final maxWeightController = TextEditingController(text: vehicle.maxCapacityWeight.toString());
+    final maxAnimalsController = TextEditingController(text: vehicle.maxCapacityAnimals.toString());
+    final pricePerKmController = TextEditingController(text: vehicle.pricePerKm.toString());
+    final pricePerAnimalController = TextEditingController(text: vehicle.pricePerAnimal?.toString() ?? '');
+    
+    String vehicleType = vehicle.vehicleType;
+    List<String> selectedAnimalTypes = List.from(vehicle.suitableAnimalTypes);
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('แก้ไขรถขนส่ง'),
+          content: SizedBox(
+            width: 500,
+            height: 600,
+            child: Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: vehicleType,
+                      decoration: const InputDecoration(
+                        labelText: 'ประเภทรถ',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'truck', child: Text('รถบรรทุก')),
+                        DropdownMenuItem(value: 'trailer', child: Text('รถพ่วง')),
+                        DropdownMenuItem(value: 'pickup', child: Text('รถกระบะ')),
+                      ],
+                      onChanged: (value) => setState(() => vehicleType = value!),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: licensePlateController,
+                      decoration: const InputDecoration(
+                        labelText: 'ทะเบียนรถ',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) => value?.isEmpty ?? true ? 'กรุณาใส่ทะเบียนรถ' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: brandController,
+                            decoration: const InputDecoration(
+                              labelText: 'ยี่ห้อ',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            controller: modelController,
+                            decoration: const InputDecoration(
+                              labelText: 'รุ่น',
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: driverNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'ชื่อคนขับ',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) => value?.isEmpty ?? true ? 'กรุณาใส่ชื่อคนขับ' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: driverPhoneController,
+                      decoration: const InputDecoration(
+                        labelText: 'เบอร์โทรคนขับ',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) => value?.isEmpty ?? true ? 'กรุณาใส่เบอร์โทร' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: maxWeightController,
+                            decoration: const InputDecoration(
+                              labelText: 'น้ำหนักสูงสุด (กก.)',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value?.isEmpty ?? true) return 'กรุณาใส่น้ำหนัก';
+                              if (double.tryParse(value!) == null) return 'กรุณาใส่ตัวเลข';
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            controller: maxAnimalsController,
+                            decoration: const InputDecoration(
+                              labelText: 'จำนวนสูงสุด (ตัว)',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value?.isEmpty ?? true) return 'กรุณาใส่จำนวน';
+                              if (int.tryParse(value!) == null) return 'กรุณาใส่ตัวเลข';
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: pricePerKmController,
+                            decoration: const InputDecoration(
+                              labelText: 'ราคา/กม. (บาท)',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value?.isEmpty ?? true) return 'กรุณาใส่ราคา';
+                              if (double.tryParse(value!) == null) return 'กรุณาใส่ตัวเลข';
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextFormField(
+                            controller: pricePerAnimalController,
+                            decoration: const InputDecoration(
+                              labelText: 'ราคา/ตัว (บาท)',
+                              border: OutlineInputBorder(),
+                              hintText: 'ถ้ามี',
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('ประเภทสัตว์ที่รับขนส่ง:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Wrap(
+                      children: ['cattle', 'buffalo', 'pig', 'chicken', 'duck', 'goat', 'sheep']
+                          .map((type) => CheckboxListTile(
+                                title: Text(_getAnimalTypeDisplayName(type)),
+                                value: selectedAnimalTypes.contains(type),
+                                onChanged: (checked) {
+                                  setState(() {
+                                    if (checked == true) {
+                                      selectedAnimalTypes.add(type);
+                                    } else {
+                                      selectedAnimalTypes.remove(type);
+                                    }
+                                  });
+                                },
+                                dense: true,
+                              ))
+                          .toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('ยกเลิก'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (formKey.currentState!.validate() && selectedAnimalTypes.isNotEmpty) {
+                  final updatedVehicle = TransportVehicle(
+                    id: vehicle.id,
+                    ownerId: vehicle.ownerId,
+                    vehicleType: vehicleType,
+                    licensePlate: licensePlateController.text,
+                    brand: brandController.text.isNotEmpty ? brandController.text : null,
+                    model: modelController.text.isNotEmpty ? modelController.text : null,
+                    driverName: driverNameController.text,
+                    driverPhone: driverPhoneController.text,
+                    maxCapacityWeight: double.parse(maxWeightController.text),
+                    maxCapacityAnimals: int.parse(maxAnimalsController.text),
+                    pricePerKm: double.parse(pricePerKmController.text),
+                    pricePerAnimal: pricePerAnimalController.text.isNotEmpty 
+                        ? double.parse(pricePerAnimalController.text) 
+                        : null,
+                    suitableAnimalTypes: selectedAnimalTypes,
+                    isActive: vehicle.isActive,
+                    createdAt: vehicle.createdAt,
+                    updatedAt: DateTime.now(),
+                  );
+                  
+                  context.read<TransportProvider>().updateVehicle(updatedVehicle);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('แก้ไขรถขนส่งเรียบร้อยแล้ว')),
+                  );
+                }
+              },
+              child: const Text('บันทึก'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -469,11 +1082,82 @@ class _TransportScreenState extends State<TransportScreen> with TickerProviderSt
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('ติดตามการขนส่ง'),
-        content: const Text('ฟีเจอร์ GPS Tracking กำลังพัฒนา'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('การจอง #${booking.id.substring(0, 8)}', 
+                 style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.location_on, color: Colors.green),
+                const SizedBox(width: 8),
+                Expanded(child: Text('จุดรับ: ${booking.pickupLocation}')),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.flag, color: Colors.red),
+                const SizedBox(width: 8),
+                Expanded(child: Text('จุดส่ง: ${booking.deliveryLocation}')),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.local_shipping, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      const Text('สถานะ: กำลังขนส่ง'),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time, color: Colors.orange),
+                      const SizedBox(width: 8),
+                      const Text('เวลาโดยประมาณ: 2 ชั่วโมง'),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.phone, color: Colors.green),
+                      const SizedBox(width: 8),
+                      const Text('คนขับ: 044-123-456'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text('หมายเหตุ: ระบบ GPS Tracking จะพัฒนาในเวอร์ชันถัดไป', 
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('ตกลง'),
+            child: const Text('ปิด'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('เปิดแอปโทรศัพท์')),
+              );
+            },
+            icon: const Icon(Icons.phone),
+            label: const Text('โทรคนขับ'),
           ),
         ],
       ),
