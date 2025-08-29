@@ -48,10 +48,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onRefresh: _loadData,
         child: SingleChildScrollView(
           padding: ResponsiveHelper.getScreenPadding(context),
-          child: ResponsiveContainer(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               // Header with greeting
               _buildHeader(),
               SizedBox(height: ResponsiveHelper.getCardSpacing(context)),
@@ -219,8 +218,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ],
               ),
-              ],
-            ),
+            ],
           ),
         ),
       ),
