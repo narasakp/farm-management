@@ -93,7 +93,7 @@ class FinancialSummaryChart extends StatelessWidget {
                     _buildFinancialItem(
                       context,
                       'รายรับ',
-                      totalIncome,
+                      income,
                       Colors.green,
                       Icons.trending_up,
                     ),
@@ -103,7 +103,7 @@ class FinancialSummaryChart extends StatelessWidget {
                     _buildFinancialItem(
                       context,
                       'รายจ่าย',
-                      totalExpense,
+                      expense,
                       Colors.red,
                       Icons.trending_down,
                     ),

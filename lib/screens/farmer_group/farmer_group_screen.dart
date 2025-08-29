@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/farmer_group_provider.dart';
 import '../../models/farmer_group.dart';
 import '../../utils/app_theme.dart';
+import '../../utils/responsive_helper.dart';
 
 class FarmerGroupScreen extends StatefulWidget {
   const FarmerGroupScreen({super.key});
@@ -99,13 +100,14 @@ class _FarmerGroupScreenState extends State<FarmerGroupScreen>
   Widget _buildGroupsTab(FarmerGroupProvider provider) {
     return RefreshIndicator(
       onRefresh: () => provider.loadData(),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: provider.activeGroups.length,
-        itemBuilder: (context, index) {
+      child: ResponsiveContainer(
+        child: ListView.builder(
+          padding: ResponsiveHelper.getScreenPadding(context),
+          itemCount: provider.activeGroups.length,
+          itemBuilder: (context, index) {
           final group = provider.activeGroups[index];
           return Card(
-            margin: const EdgeInsets.only(bottom: 12),
+            margin: EdgeInsets.only(bottom: ResponsiveHelper.getCardSpacing(context)),
             child: ListTile(
               leading: CircleAvatar(
                 backgroundColor: AppTheme.primaryColor,
@@ -161,6 +163,7 @@ class _FarmerGroupScreenState extends State<FarmerGroupScreen>
             ),
           );
         },
+        ),
       ),
     );
   }
@@ -170,72 +173,74 @@ class _FarmerGroupScreenState extends State<FarmerGroupScreen>
         ? provider.getMembersByGroup(_selectedGroupId!)
         : <GroupMember>[];
 
-    return Column(
-      children: [
-        if (_selectedGroupId == null)
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: const Text(
-              'กรุณาเลือกกลุ่มจากแท็บ "กลุ่ม" เพื่อดูสมาชิก',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          )
-        else
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: members.length,
-              itemBuilder: (context, index) {
-                final member = members[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: member.membershipType == 'leader'
-                          ? Colors.orange
-                          : member.membershipType == 'committee'
-                              ? Colors.blue
-                              : Colors.green,
-                      child: Icon(
-                        member.membershipType == 'leader'
-                            ? Icons.star
+    return ResponsiveContainer(
+      child: Column(
+        children: [
+          if (_selectedGroupId == null)
+            Container(
+              padding: ResponsiveHelper.getScreenPadding(context),
+              child: const Text(
+                'กรุณาเลือกกลุ่มจากแท็บ "กลุ่ม" เพื่อดูสมาชิก',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: members.length,
+                itemBuilder: (context, index) {
+                  final member = members[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: member.membershipType == 'leader'
+                            ? Colors.orange
                             : member.membershipType == 'committee'
-                                ? Icons.admin_panel_settings
-                                : Icons.person,
-                        color: Colors.white,
+                                ? Colors.blue
+                                : Colors.green,
+                        child: Icon(
+                          member.membershipType == 'leader'
+                              ? Icons.star
+                              : member.membershipType == 'committee'
+                                  ? Icons.admin_panel_settings
+                                  : Icons.person,
+                          color: Colors.white,
+                        ),
+                      ),
+                      title: Text('สมาชิก ${member.farmerId}'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (member.role != null) Text('ตำแหน่ง: ${member.role}'),
+                          Text('เข้าร่วม: ${_formatDate(member.joinDate)}'),
+                          Text('เงินสมทบ: ${_formatCurrency(member.contributionAmount)}'),
+                        ],
+                      ),
+                      trailing: Chip(
+                        label: Text(
+                          member.membershipType == 'leader'
+                              ? 'หัวหน้า'
+                              : member.membershipType == 'committee'
+                                  ? 'กรรมการ'
+                                  : 'สมาชิก',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        backgroundColor: member.membershipType == 'leader'
+                            ? Colors.orange[100]
+                            : member.membershipType == 'committee'
+                                ? Colors.blue[100]
+                                : Colors.green[100],
                       ),
                     ),
-                    title: Text('สมาชิก ${member.farmerId}'),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (member.role != null) Text('ตำแหน่ง: ${member.role}'),
-                        Text('เข้าร่วม: ${_formatDate(member.joinDate)}'),
-                        Text('เงินสมทบ: ${_formatCurrency(member.contributionAmount)}'),
-                      ],
-                    ),
-                    trailing: Chip(
-                      label: Text(
-                        member.membershipType == 'leader'
-                            ? 'หัวหน้า'
-                            : member.membershipType == 'committee'
-                                ? 'กรรมการ'
-                                : 'สมาชิก',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      backgroundColor: member.membershipType == 'leader'
-                          ? Colors.orange[100]
-                          : member.membershipType == 'committee'
-                              ? Colors.blue[100]
-                              : Colors.green[100],
-                    ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 

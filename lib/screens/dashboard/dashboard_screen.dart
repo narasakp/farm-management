@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/farm_provider.dart';
 import '../../providers/survey_provider.dart';
 import '../../providers/financial_provider.dart';
+import '../../utils/responsive_helper.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -45,21 +46,201 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _loadData,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: ResponsiveContainer(
+          child: SingleChildScrollView(
+            padding: ResponsiveHelper.getScreenPadding(context),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
-              const SizedBox(height: 24),
-              _buildQuickActions(),
-              const SizedBox(height: 24),
-              _buildSummaryCards(),
-              const SizedBox(height: 24),
-              _buildRecentActivities(),
+              // สถิติรวม
+              Consumer<FarmProvider>(
+                builder: (context, farmProvider, child) {
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'สถิติรวม',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: ResponsiveHelper.getCardSpacing(context)),
+                          ResponsiveLayout(
+                            mobile: Column(
+                              children: [
+                                _buildStatCard(
+                                  'ปศุสัตว์ทั้งหมด',
+                                  '${farmProvider.totalLivestock}',
+                                  Icons.pets,
+                                  Colors.blue,
+                                ),
+                                const SizedBox(height: 12),
+                                _buildStatCard(
+                                  'ฟาร์มทั้งหมด',
+                                  '${farmProvider.farms.length}',
+                                  Icons.home,
+                                  Colors.green,
+                                ),
+                              ],
+                            ),
+                            tablet: Row(
+                              children: [
+                                Expanded(
+                                  child: _buildStatCard(
+                                    'ปศุสัตว์ทั้งหมด',
+                                    '${farmProvider.totalLivestock}',
+                                    Icons.pets,
+                                    Colors.blue,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: _buildStatCard(
+                                    'ฟาร์มทั้งหมด',
+                                    '${farmProvider.farms.length}',
+                                    Icons.home,
+                                    Colors.green,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            desktop: Row(
+                              children: [
+                                Expanded(
+                                  child: _buildStatCard(
+                                    'ปศุสัตว์ทั้งหมด',
+                                    '${farmProvider.totalLivestock}',
+                                    Icons.pets,
+                                    Colors.blue,
+                                  ),
+                                ),
+                                const SizedBox(width: 20),
+                                Expanded(
+                                  child: _buildStatCard(
+                                    'ฟาร์มทั้งหมด',
+                                    '${farmProvider.farms.length}',
+                                    Icons.home,
+                                    Colors.green,
+                                  ),
+                                ),
+                                const SizedBox(width: 20),
+                                Expanded(
+                                  child: _buildStatCard(
+                                    'รายการสำรวจ',
+                                    '12',
+                                    Icons.assignment,
+                                    Colors.orange,
+                                  ),
+                                ),
+                                const SizedBox(width: 20),
+                                Expanded(
+                                  child: _buildStatCard(
+                                    'รายการเงิน',
+                                    '8',
+                                    Icons.account_balance_wallet,
+                                    Colors.purple,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              SizedBox(height: ResponsiveHelper.getCardSpacing(context)),
+              // เมนูหลัก
+              const Text(
+                'เมนูหลัก',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: ResponsiveHelper.getCardSpacing(context)),
+              ResponsiveGrid(
+                mobileColumns: 2,
+                tabletColumns: 3,
+                desktopColumns: 4,
+                spacing: ResponsiveHelper.getCardSpacing(context),
+                children: [
+                  _buildActionCard(
+                    '📋',
+                    'สำรวจปศุสัตว์',
+                    'แบบฟอร์มสำรวจดิจิทัล',
+                    () => context.go('/survey'),
+                  ),
+                  _buildActionCard(
+                    '🐮',
+                    'จัดการปศุสัตว์',
+                    'บันทึกข้อมูลสัตว์',
+                    () => context.go('/livestock'),
+                  ),
+                  _buildActionCard(
+                    '💰',
+                    'การเงิน',
+                    'บันทึกรายรับ-รายจ่าย',
+                    () => context.go('/financial'),
+                  ),
+                  _buildActionCard(
+                    '🏪',
+                    'ตลาดออนไลน์',
+                    'ซื้อ-ขายปศุสัตว์ - UPDATED',
+                    () => context.go('/market'),
+                  ),
+                  _buildActionCard(
+                    '🚛',
+                    'ขนส่ง',
+                    'จองรถขนส่งสัตว์',
+                    () => context.go('/transport'),
+                  ),
+                  _buildActionCard(
+                    '👥',
+                    'กลุ่มเกษตรกร',
+                    'จัดการกลุ่มชุมชน',
+                    () => context.go('/farmer-group'),
+                  ),
+                ],
+              ),
             ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 32, color: color),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
