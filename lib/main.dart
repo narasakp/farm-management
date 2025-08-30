@@ -22,7 +22,6 @@ import 'screens/transport/transport_list_screen.dart';
 import 'screens/financial_screen.dart';
 import 'screens/survey/livestock_survey_screen.dart';
 import 'screens/trading/market_screen.dart';
-import 'screens/transport/transport_screen.dart';
 import 'screens/farmer_group/farmer_group_screen.dart';
 import 'screens/survey/survey_list_screen.dart';
 import 'screens/survey/survey_detail_screen.dart';
@@ -127,10 +126,6 @@ class MyApp extends StatelessWidget {
         GoRoute(
           path: '/market',
           builder: (context, state) => const MarketScreen(),
-        ),
-        GoRoute(
-          path: '/transport',
-          builder: (context, state) => const TransportScreen(),
         ),
         GoRoute(
           path: '/farmer-group',
