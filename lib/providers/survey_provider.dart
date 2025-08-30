@@ -4,11 +4,17 @@ import '../models/livestock.dart';
 
 class SurveyProvider with ChangeNotifier {
   bool _isLoading = false;
-  List<FarmSurvey> _surveys = [];
+  List<FarmSurvey> _allSurveys = [];
+  List<FarmSurvey> _filteredSurveys = [];
   String? _error;
 
+  // Filter state
+  String _searchQuery = '';
+  DateTime? _startDate;
+  DateTime? _endDate;
+
   bool get isLoading => _isLoading;
-  List<FarmSurvey> get surveys => _surveys;
+  List<FarmSurvey> get surveys => _filteredSurveys;
   String? get error => _error;
 
   // Submit new survey
@@ -22,7 +28,8 @@ class SurveyProvider with ChangeNotifier {
       await Future.delayed(const Duration(seconds: 2));
       
       // Add to local list (in real app, this would be saved to backend)
-      _surveys.add(survey);
+      _allSurveys.add(survey);
+      _applyFilters(); // Re-apply filters to include the new survey
       
       _isLoading = false;
       notifyListeners();
@@ -46,7 +53,8 @@ class SurveyProvider with ChangeNotifier {
       await Future.delayed(const Duration(seconds: 1));
       
       // Load sample data
-      _surveys = _generateSampleSurveys();
+      _allSurveys = _generateSampleSurveys();
+      _filteredSurveys = List.from(_allSurveys);
       
       _isLoading = false;
       notifyListeners();
@@ -57,23 +65,57 @@ class SurveyProvider with ChangeNotifier {
     }
   }
 
+  void _applyFilters() {
+    _filteredSurveys = _allSurveys.where((survey) {
+      // Search query filter
+      final farmerName = survey.farmerInfo.fullName.toLowerCase();
+      final searchMatch = _searchQuery.isEmpty || farmerName.contains(_searchQuery.toLowerCase());
+
+      // Date range filter
+      final dateMatch = _startDate == null || _endDate == null || 
+                        (survey.surveyDate.isAfter(_startDate!.subtract(const Duration(days: 1))) && 
+                         survey.surveyDate.isBefore(_endDate!.add(const Duration(days: 1))));
+
+      return searchMatch && dateMatch;
+    }).toList();
+    notifyListeners();
+  }
+
+  void searchSurveys(String query) {
+    _searchQuery = query;
+    _applyFilters();
+  }
+
+  void setDateRange(DateTime? start, DateTime? end) {
+    _startDate = start;
+    _endDate = end;
+    _applyFilters();
+  }
+
+  void clearFilters() {
+    _searchQuery = '';
+    _startDate = null;
+    _endDate = null;
+    _applyFilters();
+  }
+
   // Get surveys by area
   List<FarmSurvey> getSurveysByArea(String tambon, String amphoe) {
-    return _surveys.where((survey) =>
+    return _allSurveys.where((survey) =>
         survey.farmerInfo.address.tambon == tambon &&
         survey.farmerInfo.address.amphoe == amphoe).toList();
   }
 
   // Get surveys by date range
   List<FarmSurvey> getSurveysByDateRange(DateTime startDate, DateTime endDate) {
-    return _surveys.where((survey) =>
+    return _allSurveys.where((survey) =>
         survey.surveyDate.isAfter(startDate.subtract(const Duration(days: 1))) &&
         survey.surveyDate.isBefore(endDate.add(const Duration(days: 1)))).toList();
   }
 
   // Generate summary statistics
   Map<String, dynamic> getSurveyStatistics() {
-    if (_surveys.isEmpty) {
+    if (_allSurveys.isEmpty) {
       return {
         'totalSurveys': 0,
         'totalFarmers': 0,
@@ -87,7 +129,7 @@ class SurveyProvider with ChangeNotifier {
     final surveysByArea = <String, int>{};
     int totalAnimals = 0;
 
-    for (final survey in _surveys) {
+    for (final survey in _allSurveys) {
       // Count animals by type
       for (final livestock in survey.livestockData) {
         final typeName = livestock.type.displayName;
@@ -101,8 +143,8 @@ class SurveyProvider with ChangeNotifier {
     }
 
     return {
-      'totalSurveys': _surveys.length,
-      'totalFarmers': _surveys.length, // Assuming one farmer per survey
+      'totalSurveys': _allSurveys.length,
+      'totalFarmers': _allSurveys.length, // Assuming one farmer per survey
       'totalAnimals': totalAnimals,
       'livestockByType': livestockByType,
       'surveysByArea': surveysByArea,

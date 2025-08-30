@@ -42,16 +42,18 @@ class AppTheme {
         onBackground: textPrimaryColor,
         onError: Colors.white,
       ),
-      scaffoldBackgroundColor: backgroundColor,
+      scaffoldBackgroundColor: Colors.white,
       appBarTheme: const AppBarTheme(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
         elevation: 0,
         centerTitle: true,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
         titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: Colors.black87,
         ),
       ),
       cardTheme: const CardThemeData(

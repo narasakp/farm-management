@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+
+import '../../models/livestock.dart';
+import '../../providers/farm_provider.dart';
+import '../../providers/livestock_provider.dart';
+import 'widgets/health_record_form.dart';
 
 class LivestockScreen extends StatefulWidget {
   const LivestockScreen({super.key});
@@ -9,41 +15,23 @@ class LivestockScreen extends StatefulWidget {
 }
 
 class _LivestockScreenState extends State<LivestockScreen> {
-  final List<Map<String, dynamic>> _livestock = [
-    {
-      'id': '1',
-      'name': 'โคนม #001',
-      'type': 'โคนม',
-      'age': '3 ปี',
-      'weight': '450 กก.',
-      'health': 'ดี',
-      'lastCheckup': '15/08/2567',
-      'status': 'ปกติ',
-    },
-    {
-      'id': '2', 
-      'name': 'โคนม #002',
-      'type': 'โคนม',
-      'age': '2 ปี 6 เดือน',
-      'weight': '380 กก.',
-      'health': 'ดี',
-      'lastCheckup': '10/08/2567',
-      'status': 'ปกติ',
-    },
-    {
-      'id': '3',
-      'name': 'ไก่ไข่ #A01',
-      'type': 'ไก่ไข่',
-      'age': '8 เดือน',
-      'weight': '1.8 กก.',
-      'health': 'ดี',
-      'lastCheckup': '20/08/2567',
-      'status': 'ปกติ',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final farmProvider = Provider.of<FarmProvider>(context, listen: false);
+      if (farmProvider.selectedFarm != null) {
+        Provider.of<LivestockProvider>(context, listen: false)
+            .loadLivestock(farmProvider.selectedFarm!.id);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final farmProvider = Provider.of<FarmProvider>(context);
+    final farmId = farmProvider.selectedFarm?.id;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('จัดการปศุสัตว์'),
@@ -54,40 +42,62 @@ class _LivestockScreenState extends State<LivestockScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: _showAddLivestockDialog,
+            onPressed: () {
+              context.push('/add-livestock');
+            },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSummaryCards(),
-            const SizedBox(height: 24),
-            Text(
-              'รายการปศุสัตว์',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+      body: Consumer<LivestockProvider>(
+        builder: (context, livestockProvider, child) {
+          if (farmId == null) {
+            return const Center(child: Text('กรุณาเลือกฟาร์มก่อน'));
+          }
+          if (livestockProvider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final livestock = livestockProvider.getLivestockByFarm(farmId);
+
+          if (livestock.isEmpty) {
+            return const Center(child: Text('ยังไม่มีข้อมูลปศุสัตว์ในฟาร์มนี้'));
+          }
+
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSummaryCards(livestock),
+                const SizedBox(height: 24),
+                Text(
+                  'รายการปศุสัตว์',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: livestock.length,
+                    itemBuilder: (context, index) {
+                      final animal = livestock[index];
+                      return _buildLivestockCard(animal);
+                    },
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _livestock.length,
-                itemBuilder: (context, index) {
-                  final animal = _livestock[index];
-                  return _buildLivestockCard(animal);
-                },
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildSummaryCards() {
+  Widget _buildSummaryCards(List<Livestock> livestock) {
+    final healthyCount = livestock.where((a) => a.status == LivestockStatus.healthy).length;
+    final needsAttentionCount = livestock.length - healthyCount;
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -96,9 +106,9 @@ class _LivestockScreenState extends State<LivestockScreen> {
       mainAxisSpacing: 12,
       childAspectRatio: 1.2,
       children: [
-        _buildSummaryCard('รวม', '${_livestock.length}', 'ตัว', Icons.pets, Colors.blue),
-        _buildSummaryCard('สุขภาพดี', '${_livestock.where((a) => a['health'] == 'ดี').length}', 'ตัว', Icons.favorite, Colors.green),
-        _buildSummaryCard('ต้องดูแล', '0', 'ตัว', Icons.warning, Colors.orange),
+        _buildSummaryCard('รวม', '${livestock.length}', 'ตัว', Icons.pets, Colors.blue),
+        _buildSummaryCard('สุขภาพดี', '$healthyCount', 'ตัว', Icons.favorite, Colors.green),
+        _buildSummaryCard('ต้องดูแล', '$needsAttentionCount', 'ตัว', Icons.warning, Colors.orange),
       ],
     );
   }
@@ -133,7 +143,10 @@ class _LivestockScreenState extends State<LivestockScreen> {
     );
   }
 
-  Widget _buildLivestockCard(Map<String, dynamic> animal) {
+  Widget _buildLivestockCard(Livestock animal) {
+    final ageInMonths = animal.ageInMonths;
+    String ageString = ageInMonths != null ? '${(ageInMonths / 12).floor()} ปี ${(ageInMonths % 12)} เดือน' : 'ไม่ระบุ';
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -146,7 +159,7 @@ class _LivestockScreenState extends State<LivestockScreen> {
                 CircleAvatar(
                   backgroundColor: Colors.green.shade100,
                   child: Icon(
-                    animal['type'] == 'โคนม' ? Icons.agriculture : Icons.egg,
+                    animal.type == LivestockType.dairyCow ? Icons.agriculture : Icons.egg,
                     color: Colors.green.shade700,
                   ),
                 ),
@@ -156,13 +169,13 @@ class _LivestockScreenState extends State<LivestockScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        animal['name'],
+                        animal.displayName,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        '${animal['type']} • ${animal['age']}',
+                        '${animal.type.displayName} • $ageString',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey[600],
                         ),
@@ -177,7 +190,7 @@ class _LivestockScreenState extends State<LivestockScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    animal['status'],
+                    animal.status.displayName,
                     style: TextStyle(
                       color: Colors.green.shade700,
                       fontSize: 12,
@@ -191,13 +204,13 @@ class _LivestockScreenState extends State<LivestockScreen> {
             Row(
               children: [
                 Expanded(
-                  child: _buildInfoItem('น้ำหนัก', animal['weight']),
+                  child: _buildInfoItem('น้ำหนัก', animal.weight != null ? '${animal.weight} กก.' : 'N/A'),
                 ),
                 Expanded(
-                  child: _buildInfoItem('สุขภาพ', animal['health']),
+                  child: _buildInfoItem('เพศ', animal.gender.displayName),
                 ),
                 Expanded(
-                  child: _buildInfoItem('ตรวจล่าสุด', animal['lastCheckup']),
+                  child: _buildInfoItem('เบอร์หู', animal.earTag ?? 'N/A'),
                 ),
               ],
             ),
@@ -206,7 +219,9 @@ class _LivestockScreenState extends State<LivestockScreen> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton.icon(
-                  onPressed: () => _showEditDialog(animal),
+                  onPressed: () {
+                    context.push('/edit-livestock', extra: animal);
+                  },
                   icon: const Icon(Icons.edit, size: 16),
                   label: const Text('แก้ไข'),
                 ),
@@ -244,58 +259,14 @@ class _LivestockScreenState extends State<LivestockScreen> {
     );
   }
 
-  void _showAddLivestockDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('เพิ่มปศุสัตว์'),
-        content: const Text('ฟีเจอร์นี้จะเปิดใช้งานในเร็วๆ นี้'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('ตกลง'),
-          ),
-        ],
-      ),
-    );
-  }
 
-  void _showEditDialog(Map<String, dynamic> animal) {
+  void _showHealthDialog(Livestock animal) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('แก้ไขข้อมูล ${animal['name']}'),
-        content: const Text('ฟีเจอร์นี้จะเปิดใช้งานในเร็วๆ นี้'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('ยกเลิก'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('บันทึก'),
-          ),
-        ],
-      ),
-    );
-  }
+        title: Text('บันทึกสุขภาพ ${animal.displayName}'),
+        content: HealthRecordForm(livestockId: animal.id),
 
-  void _showHealthDialog(Map<String, dynamic> animal) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('บันทึกสุขภาพ ${animal['name']}'),
-        content: const Text('ฟีเจอร์นี้จะเปิดใช้งานในเร็วๆ นี้'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('ยกเลิก'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('บันทึก'),
-          ),
-        ],
       ),
     );
   }

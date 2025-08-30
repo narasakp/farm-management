@@ -125,8 +125,14 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
                 );
               }
 
-              return ListView.builder(
+              return GridView.builder(
                 padding: const EdgeInsets.all(16),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.75,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
                 itemCount: listings.length,
                 itemBuilder: (context, index) {
                   return _buildListingCard(listings[index]);
@@ -215,110 +221,120 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
     );
   }
 
-  Widget _buildListingCard(MarketListing listing) {
+  Widget _buildListingCard(Map<String, dynamic> listing) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
       child: InkWell(
         onTap: () => _showListingDetails(listing),
         borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.green.shade100,
-                    child: Icon(
-                      _getAnimalIcon(listing.livestockId),
-                      color: Colors.green.shade700,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image placeholder
+            Container(
+              height: 120,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              ),
+              child: Icon(
+                _getCategoryIcon(listing['category']),
+                size: 48,
+                color: Colors.grey[400],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      listing['title'],
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 4),
+                    Text(
+                      '฿${listing['price'].toStringAsFixed(0)}/${listing['unit']}',
+                      style: TextStyle(
+                        color: Colors.green.shade700,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      listing['seller'],
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                    const Spacer(),
+                    Row(
                       children: [
-                        Text(
-                          'โค #${listing.livestockId}', // TODO: Get actual livestock name
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'น้ำหนัก: 450 กก. • อายุ: 3 ปี', // TODO: Get actual data
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
+                        Icon(Icons.location_on, size: 12, color: Colors.grey[600]),
+                        const SizedBox(width: 2),
+                        Expanded(
+                          child: Text(
+                            listing['location'],
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 11,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '฿${listing.askingPrice.toStringAsFixed(0)}',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green.shade700,
-                        ),
-                      ),
-                      if (listing.isNegotiable)
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(Icons.visibility, size: 12, color: Colors.grey[600]),
+                        const SizedBox(width: 2),
                         Text(
-                          'ต่อรองได้',
+                          '${listing['views']}',
                           style: TextStyle(
-                            color: Colors.orange.shade600,
-                            fontSize: 12,
+                            color: Colors.grey[600],
+                            fontSize: 11,
                           ),
                         ),
-                    ],
-                  ),
-                ],
-              ),
-              if (listing.description != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  listing.description!,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                        const Spacer(),
+                        if (listing['status'] == 'sold')
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              'ขายแล้ว',
+                              style: TextStyle(
+                                color: Colors.red.shade700,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Text(
-                    'ชัยภูมิ', // TODO: Get actual location
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  ),
-                  const Spacer(),
-                  Icon(Icons.visibility, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${listing.viewCount} ครั้ง',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Text(
-                    _formatTimeAgo(listing.listedDate),
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  ),
-                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildMarketCard(LivestockMarket market) {
+  Widget _buildMarketCard(Map<String, dynamic> market) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -329,7 +345,7 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
             Row(
               children: [
                 Icon(
-                  market.type == 'physical' ? Icons.store : Icons.computer,
+                  Icons.store,
                   color: Colors.blue.shade700,
                 ),
                 const SizedBox(width: 12),
@@ -338,13 +354,13 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        market.name,
+                        market['name'],
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        market.location,
+                        market['location'],
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey[600],
                         ),
@@ -359,26 +375,29 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
               ],
             ),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              children: market.operatingDays.map((day) => Chip(
-                label: Text(day, style: const TextStyle(fontSize: 12)),
-                backgroundColor: Colors.green.shade50,
-              )).toList(),
+            Text(
+              'วันทำการ: ${market['openDays']}',
+              style: TextStyle(color: Colors.grey[700]),
             ),
-            if (market.operatingHours != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
-                  const SizedBox(width: 4),
-                  Text(
-                    market.operatingHours!,
-                    style: TextStyle(color: Colors.grey[600]),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 4),
+                Text(
+                  market['openTime'],
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                const Spacer(),
+                Text(
+                  'คิวรอ: ${market['queueCount']} คน',
+                  style: TextStyle(
+                    color: Colors.orange.shade700,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -474,9 +493,25 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
     );
   }
 
-  IconData _getAnimalIcon(String livestockId) {
-    // TODO: Get actual animal type from livestock data
-    return Icons.agriculture;
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'โค':
+        return Icons.agriculture;
+      case 'สุกร':
+        return Icons.pets;
+      case 'ไก่':
+        return Icons.egg;
+      case 'แพะ':
+        return Icons.grass;
+      case 'เป็ด':
+        return Icons.water;
+      case 'กระบือ':
+        return Icons.agriculture;
+      case 'แกะ':
+        return Icons.grass;
+      default:
+        return Icons.agriculture;
+    }
   }
 
   String _formatTimeAgo(DateTime date) {
@@ -636,22 +671,30 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
     );
   }
 
-  void _showListingDetails(MarketListing listing) {
+  void _showListingDetails(Map<String, dynamic> listing) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('รายละเอียด #${listing.livestockId}'),
+        title: Text(listing['title']),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('ราคา: ฿${listing.askingPrice.toStringAsFixed(0)}'),
-            if (listing.description != null) ...[
+            Text('ราคา: ฿${listing['price'].toStringAsFixed(0)}/${listing['unit']}'),
+            const SizedBox(height: 8),
+            Text('ผู้ขาย: ${listing['seller']}'),
+            const SizedBox(height: 8),
+            Text('สถานที่: ${listing['location']}'),
+            const SizedBox(height: 8),
+            Text('จำนวน: ${listing['quantity']} ${listing['unit']}'),
+            if (listing['description'] != null) ...[
               const SizedBox(height: 8),
-              Text('รายละเอียด: ${listing.description}'),
+              Text('รายละเอียด: ${listing['description']}'),
             ],
             const SizedBox(height: 8),
-            Text('วันที่ประกาศ: ${listing.listedDate.day}/${listing.listedDate.month}/${listing.listedDate.year}'),
+            Text('ยอดเข้าชม: ${listing['views']} ครั้ง'),
+            const SizedBox(height: 8),
+            Text('ถูกใจ: ${listing['likes']} ครั้ง'),
           ],
         ),
         actions: [
@@ -730,7 +773,7 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
     );
   }
 
-  void _showBookingDialog(LivestockMarket market) {
+  void _showBookingDialog(Map<String, dynamic> market) {
     final formKey = GlobalKey<FormState>();
     final livestockCountController = TextEditingController();
     final notesController = TextEditingController();
@@ -741,7 +784,7 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text('จองคิว ${market.name}'),
+          title: Text('จองคิว ${market['name']}'),
           content: SizedBox(
             width: 400,
             child: Form(
@@ -819,7 +862,7 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
                   final booking = MarketBooking(
                     id: DateTime.now().millisecondsSinceEpoch.toString(),
                     farmId: 'current_user_farm',
-                    marketId: market.id,
+                    marketId: market['id'],
                     bookingDate: selectedDate,
                     livestockType: 'โค',
                     quantity: int.parse(livestockCountController.text),

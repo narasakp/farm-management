@@ -94,6 +94,23 @@ class Livestock {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Compatibility properties for new screens
+  String get tagNumber => earTag ?? id;
+  String get healthStatus {
+    switch (status) {
+      case LivestockStatus.healthy:
+        return 'healthy';
+      case LivestockStatus.sick:
+        return 'sick';
+      case LivestockStatus.pregnant:
+        return 'pregnant';
+      case LivestockStatus.sold:
+        return 'sold';
+      default:
+        return 'healthy';
+    }
+  }
+
   Livestock({
     required this.id,
     required this.farmId,
@@ -211,58 +228,3 @@ class Livestock {
   }
 }
 
-class HealthRecord {
-  final String id;
-  final String livestockId;
-  final DateTime date;
-  final String symptoms;
-  final String? diagnosis;
-  final String? treatment;
-  final String? medication;
-  final double? cost;
-  final String? veterinarian;
-  final DateTime createdAt;
-
-  HealthRecord({
-    required this.id,
-    required this.livestockId,
-    required this.date,
-    required this.symptoms,
-    this.diagnosis,
-    this.treatment,
-    this.medication,
-    this.cost,
-    this.veterinarian,
-    required this.createdAt,
-  });
-
-  factory HealthRecord.fromJson(Map<String, dynamic> json) {
-    return HealthRecord(
-      id: json['id'],
-      livestockId: json['livestockId'],
-      date: DateTime.parse(json['date']),
-      symptoms: json['symptoms'],
-      diagnosis: json['diagnosis'],
-      treatment: json['treatment'],
-      medication: json['medication'],
-      cost: json['cost']?.toDouble(),
-      veterinarian: json['veterinarian'],
-      createdAt: DateTime.parse(json['createdAt']),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'livestockId': livestockId,
-      'date': date.toIso8601String(),
-      'symptoms': symptoms,
-      'diagnosis': diagnosis,
-      'treatment': treatment,
-      'medication': medication,
-      'cost': cost,
-      'veterinarian': veterinarian,
-      'createdAt': createdAt.toIso8601String(),
-    };
-  }
-}

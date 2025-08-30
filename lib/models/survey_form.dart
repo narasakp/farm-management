@@ -76,6 +76,8 @@ class FarmerInfo {
     required this.address,
   });
 
+  String get fullName => '$title$firstName $lastName';
+
   factory FarmerInfo.fromJson(Map<String, dynamic> json) {
     return FarmerInfo(
       title: json['title'],

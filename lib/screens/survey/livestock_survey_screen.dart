@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../models/livestock.dart';
 import '../../models/survey_form.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/survey_provider.dart';
 import '../../utils/app_theme.dart';
 
@@ -47,7 +49,10 @@ class _LivestockSurveyScreenState extends State<LivestockSurveyScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('สำรวจข้อมูลปศุสัตว์'),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
       ),
       body: Consumer<SurveyProvider>(
         builder: (context, surveyProvider, child) {
@@ -538,7 +543,7 @@ class _LivestockSurveyScreenState extends State<LivestockSurveyScreen> {
     final survey = FarmSurvey(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       farmerId: 'farmer_${_idCardController.text}',
-      surveyorId: 'current_user_id', // จะต้องได้จาก auth provider
+      surveyorId: context.read<AuthProvider>().currentUser?.phoneNumber ?? 'unknown_user',
       surveyDate: DateTime.now(),
       farmerInfo: FarmerInfo(
         title: _titleController.text,
