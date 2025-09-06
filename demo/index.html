@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm Management App - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .header {
+            background-color: #8B4513;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .nav {
+            background-color: #228B22;
+            padding: 0.5rem 2rem;
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-item {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .stat-card.green {
+            border-left-color: #228B22;
+        }
+        
+        .stat-card.brown {
+            border-left-color: #8B4513;
+        }
+        
+        .stat-card.yellow {
+            border-left-color: #DAA520;
+        }
+        
+        .stat-card.red {
+            border-left-color: #CD5C5C;
+        }
+        
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card.green .value {
+            color: #228B22;
+        }
+        
+        .stat-card.brown .value {
+            color: #8B4513;
+        }
+        
+        .stat-card.yellow .value {
+            color: #DAA520;
+        }
+        
+        .stat-card.red .value {
+            color: #CD5C5C;
+        }
+        
+        .stat-card .icon {
+            font-size: 3rem;
+            opacity: 0.3;
+            float: right;
+            margin-top: -1rem;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: #8B4513;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .feature-item {
+            padding: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+        
+        .feature-item:hover {
+            border-color: #228B22;
+        }
+        
+        .feature-item h4 {
+            color: #228B22;
+            margin-bottom: 0.5rem;
+        }
+        
+        .color-palette {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .color-sample {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+        
+        .footer {
+            background-color: #8B4513;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🐄 ระบบจัดการฟาร์มปศุสัตว์</h1>
+    </header>
+    
+    <nav class="nav">
+        <a href="#" class="nav-item active">หน้าแรก</a>
+        <a href="#" class="nav-item">จัดการปศุสัตว์</a>
+        <a href="#" class="nav-item">อาหารสัตว์</a>
+        <a href="#" class="nav-item">การผสมพันธุ์</a>
+        <a href="#" class="nav-item">การขนส่ง</a>
+        <a href="#" class="nav-item">รายงาน</a>
+    </nav>
+    
+    <div class="container">
+        <div class="dashboard-grid">
+            <div class="stat-card green">
+                <div class="icon">🐄</div>
+                <h3>จำนวนปศุสัตว์ทั้งหมด</h3>
+                <div class="value">247</div>
+                <p>เพิ่มขึ้น 12 ตัว จากเดือนที่แล้ว</p>
+            </div>
+            
+            <div class="stat-card brown">
+                <div class="icon">🌾</div>
+                <h3>สต็อกอาหารสัตว์</h3>
+                <div class="value">85%</div>
+                <p>เพียงพอสำหรับ 45 วัน</p>
+            </div>
+            
+            <div class="stat-card yellow">
+                <div class="icon">⚠️</div>
+                <h3>การแจ้งเตือน</h3>
+                <div class="value">8</div>
+                <p>ต้องการความสนใจ</p>
+            </div>
+            
+            <div class="stat-card red">
+                <div class="icon">🏥</div>
+                <h3>สัตว์ป่วย</h3>
+                <div class="value">3</div>
+                <p>กำลังรักษา</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🎨 ชุดสี 4 สีหลักที่อัปเดตแล้ว</h2>
+            <p>แอปพลิเคชันได้รับการอัปเดตให้ใช้ชุดสีที่สอดคล้องกันทั้งระบบ เพื่อประสบการณ์ผู้ใช้ที่ดีขึ้น</p>
+            <div class="color-palette">
+                <div class="color-sample" style="background-color: #228B22;">
+                    Forest<br>Green<br>45%
+                </div>
+                <div class="color-sample" style="background-color: #8B4513;">
+                    Warm<br>Brown<br>25%
+                </div>
+                <div class="color-sample" style="background-color: #DAA520;">
+                    Golden<br>Yellow<br>20%
+                </div>
+                <div class="color-sample" style="background-color: #CD5C5C;">
+                    Muted<br>Red<br>10%
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>✨ ฟีเจอร์หลัก</h2>
+            <div class="feature-list">
+                <div class="feature-item">
+                    <h4>🐄 จัดการปศุสัตว์</h4>
+                    <p>ติดตามข้อมูลสัตว์ สุขภาพ และประวัติการรักษา</p>
+                </div>
+                <div class="feature-item">
+                    <h4>🌾 จัดการอาหารสัตว์</h4>
+                    <p>ควบคุมสต็อก กำหนดตารางให้อาหาร</p>
+                </div>
+                <div class="feature-item">
+                    <h4>💕 การผสมพันธุ์</h4>
+                    <p>บันทึกการผสมพันธุ์ ติดตามการตั้งท้อง</p>
+                </div>
+                <div class="feature-item">
+                    <h4>🚛 การขนส่ง</h4>
+                    <p>จัดการการขนส่งสัตว์และผลิตภัณฑ์</p>
+                </div>
+                <div class="feature-item">
+                    <h4>📊 รายงานและสถิติ</h4>
+                    <p>วิเคราะห์ข้อมูล สร้างรายงานประจำเดือน</p>
+                </div>
+                <div class="feature-item">
+                    <h4>👥 จัดการกลุ่มเกษตรกร</h4>
+                    <p>ประสานงานกับสมาชิกในกลุ่ม</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📈 สถานะโครงการ</h2>
+            <p><strong>✅ เสร็จสิ้น:</strong> อัปเดตชุดสี 4 สีหลักครบทุกหน้าจอ</p>
+            <p><strong>🎯 เป้าหมาย:</strong> UI ที่สอดคล้อง เป็นมิตรกับผู้สูงอายุ และใช้งานง่าย</p>
+            <p><strong>🎨 ผลลัพธ์:</strong> ระบบสีที่เป็นธรรมชาติ เข้าถึงได้ และสร้างอัตลักษณ์แบรนด์ที่ชัดเจน</p>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <p>© 2024 Farm Management System - ระบบจัดการฟาร์มปศุสัตว์</p>
+        <p>อัปเดตชุดสี 4 สีหลักเสร็จสิ้น ✨</p>
+    </footer>
+    
+    <script>
+        // Simple interactivity
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('click', () => {
+                card.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    card.style.transform = 'translateY(-2px)';
+                }, 100);
+            });
+        });
+        
+        // Color palette click effects
+        document.querySelectorAll('.color-sample').forEach(sample => {
+            sample.addEventListener('click', () => {
+                const color = sample.style.backgroundColor;
+                document.body.style.backgroundColor = color;
+                setTimeout(() => {
+                    document.body.style.backgroundColor = '#f5f5f5';
+                }, 1000);
+            });
+        });
+    </script>
+</body>
+</html>
