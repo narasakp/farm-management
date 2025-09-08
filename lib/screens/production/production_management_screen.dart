@@ -37,7 +37,7 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('จัดการการผลิต'),
-        backgroundColor: const Color(0xFF8B4513).shade700,
+        backgroundColor: const Color(0xFF8B4513),
         foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
@@ -63,7 +63,7 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error, size: 64, color: const Color(0xFFCD5C5C).shade300),
+                  Icon(Icons.error, size: 64, color: const Color(0xFFCD5C5C).withOpacity(0.6)),
                   const SizedBox(height: 16),
                   Text(productionProvider.error!),
                   const SizedBox(height: 16),
@@ -89,7 +89,7 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddProductionDialog(context),
-        backgroundColor: const Color(0xFF8B4513).shade700,
+        backgroundColor: const Color(0xFF8B4513),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -283,7 +283,7 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
                               const Text('วันนี้', style: TextStyle(fontSize: 12)),
                               LinearProgressIndicator(
                                 value: dailyProgress / 100,
-                                backgroundColor: Colors.grey.shade300,
+                                backgroundColor: Colors.grey.withOpacity(0.3),
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   dailyProgress >= 100 ? const Color(0xFF8B4513) : const Color(0xFF228B22),
                                 ),
@@ -300,7 +300,7 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
                               const Text('เดือนนี้', style: TextStyle(fontSize: 12)),
                               LinearProgressIndicator(
                                 value: monthlyProgress / 100,
-                                backgroundColor: Colors.grey.shade300,
+                                backgroundColor: Colors.grey.withOpacity(0.3),
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   monthlyProgress >= 100 ? const Color(0xFF8B4513) : const Color(0xFF228B22),
                                 ),
@@ -342,7 +342,7 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: Colors.grey.shade100,
+                  fillColor: Colors.grey.withOpacity(0.1),
                 ),
                 onChanged: (value) {
                   setState(() {

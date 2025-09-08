@@ -10,6 +10,10 @@ import 'providers/transport_provider.dart';
 import 'providers/farmer_group_provider.dart';
 import 'providers/livestock_provider.dart';
 import 'providers/farm_record_provider.dart';
+import 'providers/feedback_provider.dart';
+import 'providers/research_provider.dart';
+// import 'providers/advanced_financial_provider.dart';
+// import 'providers/gps_provider.dart';
 import 'models/livestock.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/farm/add_edit_livestock_screen.dart';
@@ -25,8 +29,14 @@ import 'screens/trading/market_screen.dart';
 import 'screens/farmer_group/farmer_group_screen.dart';
 import 'screens/survey/survey_list_screen.dart';
 import 'screens/survey/survey_detail_screen.dart';
+import 'screens/dashboard/project_report_screen.dart';
+import 'screens/feedback/feedback_screen.dart';
+import 'screens/research/research_screen.dart';
+// import 'screens/financial/advanced_financial_screen.dart';
+// import 'screens/gps/gps_tracking_screen.dart';
 import 'models/survey_form.dart';
 import 'utils/app_theme.dart';
+import 'utils/font_override.dart';
 
 void main() {
   runApp(const MyApp());
@@ -48,12 +58,21 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FarmerGroupProvider()),
         ChangeNotifierProvider(create: (_) => LivestockProvider()),
         ChangeNotifierProvider(create: (_) => FarmRecordProvider()),
+        ChangeNotifierProvider(create: (_) => FeedbackProvider()),
+        ChangeNotifierProvider(create: (_) => ResearchProvider()),
+        // ChangeNotifierProvider(create: (_) => AdvancedFinancialProvider()),
+        // ChangeNotifierProvider(create: (_) => GPSProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           return MaterialApp.router(
             title: 'ระบบจัดการฟาร์มปศุสัตว์',
-            theme: AppTheme.lightTheme,
+            theme: AppTheme.lightTheme.copyWith(
+              textTheme: AppTheme.lightTheme.textTheme.apply(
+                fontSizeFactor: 1.4, // เพิ่มขนาดฟอนต์ 40%
+                fontSizeDelta: 2.0,   // เพิ่มขนาดฟอนต์อีก 2pt
+              ),
+            ),
             routerConfig: _createRouter(authProvider),
           );
         },
@@ -130,6 +149,46 @@ class MyApp extends StatelessWidget {
         GoRoute(
           path: '/farmer-group',
           builder: (context, state) => const FarmerGroupScreen(),
+        ),
+        GoRoute(
+          path: '/project-report',
+          builder: (context, state) => const ProjectReportScreen(),
+        ),
+        GoRoute(
+          path: '/reports-analytics',
+          builder: (context, state) => const DashboardScreen(),
+        ),
+        GoRoute(
+          path: '/research-development',
+          builder: (context, state) => const ResearchScreen(),
+        ),
+        GoRoute(
+          path: '/feedback',
+          builder: (context, state) => const FeedbackScreen(),
+        ),
+        // GoRoute(
+        //   path: '/advanced-financial',
+        //   builder: (context, state) => const AdvancedFinancialScreen(),
+        // ),
+        // GoRoute(
+        //   path: '/gps-tracking',
+        //   builder: (context, state) => const GPSTrackingScreen(),
+        // ),
+        GoRoute(
+          path: '/health-management',
+          builder: (context, state) => const DashboardScreen(),
+        ),
+        GoRoute(
+          path: '/breeding-management',
+          builder: (context, state) => const DashboardScreen(),
+        ),
+        GoRoute(
+          path: '/production-management',
+          builder: (context, state) => const DashboardScreen(),
+        ),
+        GoRoute(
+          path: '/feed-management',
+          builder: (context, state) => const DashboardScreen(),
         ),
       ],
       redirect: (context, state) {

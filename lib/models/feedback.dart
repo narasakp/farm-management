@@ -10,6 +10,7 @@ class Feedback {
   final String message;
   final int rating; // 1-5 stars
   final List<String> attachments; // URLs or file paths
+  final FeedbackPriority priority;
   final FeedbackStatus status;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -28,6 +29,7 @@ class Feedback {
     required this.message,
     required this.rating,
     this.attachments = const [],
+    this.priority = FeedbackPriority.medium,
     this.status = FeedbackStatus.pending,
     required this.createdAt,
     this.updatedAt,
@@ -52,6 +54,10 @@ class Feedback {
       message: json['message'],
       rating: json['rating'],
       attachments: List<String>.from(json['attachments'] ?? []),
+      priority: FeedbackPriority.values.firstWhere(
+        (e) => e.toString().split('.').last == json['priority'],
+        orElse: () => FeedbackPriority.medium,
+      ),
       status: FeedbackStatus.values.firstWhere(
         (e) => e.toString().split('.').last == json['status'],
       ),
@@ -75,6 +81,7 @@ class Feedback {
       'message': message,
       'rating': rating,
       'attachments': attachments,
+      'priority': priority.toString().split('.').last,
       'status': status.toString().split('.').last,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
@@ -95,6 +102,7 @@ class Feedback {
     String? message,
     int? rating,
     List<String>? attachments,
+    FeedbackPriority? priority,
     FeedbackStatus? status,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -113,6 +121,7 @@ class Feedback {
       message: message ?? this.message,
       rating: rating ?? this.rating,
       attachments: attachments ?? this.attachments,
+      priority: priority ?? this.priority,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -191,6 +200,13 @@ enum FeedbackCategory {
   trading,    // การซื้อขาย
   transport,  // การขนส่ง
   other,      // อื่นๆ
+}
+
+enum FeedbackPriority {
+  low,    // ต่ำ
+  medium, // ปานกลาง
+  high,   // สูง
+  urgent, // เร่งด่วน
 }
 
 enum FeedbackStatus {

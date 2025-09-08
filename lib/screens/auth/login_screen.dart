@@ -116,16 +116,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
-                          Icons.agriculture,
-                          size: 64,
-                          color: Color(0xFF2F855A),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF228B22).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(
+                            Icons.agriculture,
+                            size: 64,
+                            color: Color(0xFF228B22),
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           '🐄 ระบบจัดการฟาร์มปศุสัตว์',
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: const Color(0xFF2F855A),
+                            color: const Color(0xFF228B22),
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
@@ -203,15 +210,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 : const Text('เข้าสู่ระบบ'),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 24),
                         Container(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.blue.shade200),
+                            color: Colors.blue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Column(
+                          child: Column(
                             children: [
                               Text(
                                 '🔐 ข้อมูลทดสอบ',
@@ -220,9 +226,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color: Colors.blue,
                                 ),
                               ),
-                              SizedBox(height: 4),
-                              Text('เบอร์โทร: 0812345678'),
-                              Text('รหัสผ่าน: 123456'),
+                              const SizedBox(height: 4),
+                              const Text('เบอร์โทร: 0812345678'),
+                              const Text('รหัสผ่าน: 123456'),
                             ],
                           ),
                         ),

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/livestock.dart';
-import '../../models/survey_form.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/survey_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/survey_form.dart';
+import '../../models/livestock.dart';
+import '../../utils/responsive_helper.dart';
 import '../../utils/app_theme.dart';
 
 class LivestockSurveyScreen extends StatefulWidget {
@@ -48,11 +49,25 @@ class _LivestockSurveyScreenState extends State<LivestockSurveyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('สำรวจข้อมูลปศุสัตว์'),
+        title: const Text('สำรวจปศุสัตว์'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
+        elevation: 0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF228B22).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.home_rounded, size: 28),
+            color: const Color(0xFF228B22).withOpacity(0.8),
+            onPressed: () => context.go('/dashboard'),
+            tooltip: 'หน้าแรก',
+          ),
+        ),
       ),
       body: Consumer<SurveyProvider>(
         builder: (context, surveyProvider, child) {

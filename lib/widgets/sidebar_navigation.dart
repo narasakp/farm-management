@@ -150,7 +150,7 @@ class _SidebarNavigationState extends State<SidebarNavigation> {
                       ),
                     ),
                     selected: isSelected,
-                    selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                    selectedColor: Theme.of(context).primaryColor.withOpacity(0.1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),

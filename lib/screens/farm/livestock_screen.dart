@@ -157,10 +157,10 @@ class _LivestockScreenState extends State<LivestockScreen> {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: Colors.green.shade100,
+                  backgroundColor: const Color(0xFF8B4513),
                   child: Icon(
                     animal.type == LivestockType.dairyCow ? Icons.agriculture : Icons.egg,
-                    color: Colors.green.shade700,
+                    color: const Color(0xFF228B22),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -186,13 +186,13 @@ class _LivestockScreenState extends State<LivestockScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade100,
+                    color: const Color(0xFF228B22).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     animal.status.displayName,
                     style: TextStyle(
-                      color: Colors.green.shade700,
+                      color: const Color(0xFF228B22),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),

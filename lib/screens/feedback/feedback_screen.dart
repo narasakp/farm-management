@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+// import 'dart:io';
+// import 'package:file_picker/file_picker.dart';
 import '../../providers/feedback_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/feedback.dart' as FeedbackModel;
@@ -22,16 +24,25 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
   final _messageController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _searchController = TextEditingController();
   
   // Form values
   FeedbackModel.FeedbackType _selectedType = FeedbackModel.FeedbackType.suggestion;
   FeedbackModel.FeedbackCategory _selectedCategory = FeedbackModel.FeedbackCategory.ui;
+  FeedbackModel.FeedbackPriority _selectedPriority = FeedbackModel.FeedbackPriority.medium;
   int _rating = 5;
+  List<String> _attachedFiles = [];
+  
+  // Filter values
+  FeedbackModel.FeedbackType? _filterType;
+  FeedbackModel.FeedbackStatus? _filterStatus;
+  FeedbackModel.FeedbackCategory? _filterCategory;
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     
     // Initialize feedback provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -46,6 +57,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
     _messageController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -59,18 +71,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.blue.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.home_rounded, size: 28),
-            color: Color(0xFF8B4513),
-            onPressed: () => context.go('/dashboard'),
-            tooltip: 'หน้าแรก',
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.home, color: Colors.white),
+          onPressed: () => context.go('/dashboard'),
+          tooltip: 'กลับหน้าหลัก',
         ),
         bottom: TabBar(
           controller: _tabController,
@@ -83,6 +87,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
               icon: Icon(Icons.history),
               text: 'ประวัติข้อเสนอแนะ',
             ),
+            Tab(
+              icon: Icon(Icons.analytics),
+              text: 'สถิติและวิเคราะห์',
+            ),
           ],
         ),
       ),
@@ -91,6 +99,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
         children: [
           _buildFeedbackForm(),
           _buildFeedbackHistory(),
+          _buildAnalyticsDashboard(),
         ],
       ),
     );
@@ -289,6 +298,75 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
             
             const SizedBox(height: 24),
             
+            // Priority
+            Text(
+              'ระดับความสำคัญ',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<FeedbackModel.FeedbackPriority>(
+              value: _selectedPriority,
+              decoration: const InputDecoration(
+                labelText: 'เลือกระดับความสำคัญ',
+                border: OutlineInputBorder(),
+              ),
+              items: FeedbackModel.FeedbackPriority.values.map((priority) {
+                return DropdownMenuItem(
+                  value: priority,
+                  child: Text(_getPriorityText(priority)),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedPriority = value!;
+                });
+              },
+            ),
+            
+            const SizedBox(height: 24),
+            
+            // File Attachments
+            Text(
+              'แนบไฟล์ (ถ้ามี)',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _pickFiles,
+                      icon: const Icon(Icons.attach_file),
+                      label: const Text('เลือกไฟล์'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF8B4513),
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                    if (_attachedFiles.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      ...(_attachedFiles.map((file) => ListTile(
+                        leading: const Icon(Icons.insert_drive_file),
+                        title: Text(file.split('/').last),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.remove_circle, color: Colors.red),
+                          onPressed: () {
+                            setState(() {
+                              _attachedFiles.remove(file);
+                            });
+                          },
+                        ),
+                      ))),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+            
             // Rating
             Text(
               'คะแนนความพึงพอใจ',
@@ -359,32 +437,134 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
   Widget _buildFeedbackHistory() {
     return Consumer<FeedbackProvider>(
       builder: (context, feedbackProvider, child) {
-        final feedbacks = feedbackProvider.feedbacks;
+        var feedbacks = feedbackProvider.feedbacks;
         
-        if (feedbacks.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.history,
-                  size: 64,
-                  color: Colors.grey,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'ยังไม่มีประวัติข้อเสนอแนะ',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ],
-            ),
-          );
+        // Apply filters
+        if (_filterType != null) {
+          feedbacks = feedbacks.where((f) => f.type == _filterType).toList();
+        }
+        if (_filterStatus != null) {
+          feedbacks = feedbacks.where((f) => f.status == _filterStatus).toList();
+        }
+        if (_filterCategory != null) {
+          feedbacks = feedbacks.where((f) => f.category == _filterCategory).toList();
+        }
+        if (_searchQuery.isNotEmpty) {
+          feedbacks = feedbacks.where((f) => 
+            f.subject.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            f.message.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            f.userName.toLowerCase().contains(_searchQuery.toLowerCase())
+          ).toList();
         }
         
-        return ListView.builder(
-          padding: EdgeInsets.all(ResponsiveHelper.getCardSpacing(context)),
-          itemCount: feedbacks.length,
-          itemBuilder: (context, index) {
+        return Column(
+          children: [
+            // Search and Filter Bar
+            Padding(
+              padding: EdgeInsets.all(ResponsiveHelper.getCardSpacing(context)),
+              child: Column(
+                children: [
+                  // Search Bar
+                  TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      labelText: 'ค้นหาข้อเสนอแนะ',
+                      prefixIcon: const Icon(Icons.search),
+                      border: const OutlineInputBorder(),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                            )
+                          : null,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Filter Chips
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        FilterChip(
+                          label: Text(_filterType?.toString().split('.').last ?? 'ประเภท'),
+                          selected: _filterType != null,
+                          onSelected: (selected) {
+                            _showTypeFilter();
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        FilterChip(
+                          label: Text(_filterStatus?.toString().split('.').last ?? 'สถานะ'),
+                          selected: _filterStatus != null,
+                          onSelected: (selected) {
+                            _showStatusFilter();
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        FilterChip(
+                          label: Text(_filterCategory?.toString().split('.').last ?? 'หมวดหมู่'),
+                          selected: _filterCategory != null,
+                          onSelected: (selected) {
+                            _showCategoryFilter();
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        if (_filterType != null || _filterStatus != null || _filterCategory != null)
+                          ActionChip(
+                            label: const Text('ล้างตัวกรอง'),
+                            onPressed: () {
+                              setState(() {
+                                _filterType = null;
+                                _filterStatus = null;
+                                _filterCategory = null;
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Results
+            Expanded(
+              child: feedbacks.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.search_off,
+                            size: 64,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _searchQuery.isNotEmpty || _filterType != null || _filterStatus != null || _filterCategory != null
+                                ? 'ไม่พบข้อเสนอแนะที่ตรงกับเงื่อนไข'
+                                : 'ยังไม่มีประวัติข้อเสนอแนะ',
+                            style: Theme.of(context).textTheme.titleLarge,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: EdgeInsets.symmetric(horizontal: ResponsiveHelper.getCardSpacing(context)),
+                      itemCount: feedbacks.length,
+                      itemBuilder: (context, index) {
             final feedback = feedbacks[index];
             return Card(
               margin: const EdgeInsets.only(bottom: 16),
@@ -490,9 +670,132 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
                 ),
               ),
             );
-          },
+                      },
+                    ),
+            ),
+          ],
         );
       },
+    );
+  }
+
+  void _showTypeFilter() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('เลือกประเภท'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('ทั้งหมด'),
+              leading: Radio<FeedbackModel.FeedbackType?>(
+                value: null,
+                groupValue: _filterType,
+                onChanged: (value) {
+                  setState(() {
+                    _filterType = value;
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            ...FeedbackModel.FeedbackType.values.map((type) => ListTile(
+              title: Text(_getFeedbackTypeText(type)),
+              leading: Radio<FeedbackModel.FeedbackType?>(
+                value: type,
+                groupValue: _filterType,
+                onChanged: (value) {
+                  setState(() {
+                    _filterType = value;
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showStatusFilter() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('เลือกสถานะ'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('ทั้งหมด'),
+              leading: Radio<FeedbackModel.FeedbackStatus?>(
+                value: null,
+                groupValue: _filterStatus,
+                onChanged: (value) {
+                  setState(() {
+                    _filterStatus = value;
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            ...FeedbackModel.FeedbackStatus.values.map((status) => ListTile(
+              title: Text(_getStatusText(status)),
+              leading: Radio<FeedbackModel.FeedbackStatus?>(
+                value: status,
+                groupValue: _filterStatus,
+                onChanged: (value) {
+                  setState(() {
+                    _filterStatus = value;
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCategoryFilter() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('เลือกหมวดหมู่'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('ทั้งหมด'),
+              leading: Radio<FeedbackModel.FeedbackCategory?>(
+                value: null,
+                groupValue: _filterCategory,
+                onChanged: (value) {
+                  setState(() {
+                    _filterCategory = value;
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            ...FeedbackModel.FeedbackCategory.values.map((category) => ListTile(
+              title: Text(_getFeedbackCategoryText(category)),
+              leading: Radio<FeedbackModel.FeedbackCategory?>(
+                value: category,
+                groupValue: _filterCategory,
+                onChanged: (value) {
+                  setState(() {
+                    _filterCategory = value;
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+            )),
+          ],
+        ),
+      ),
     );
   }
 
@@ -516,7 +819,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
     return Chip(
       label: Text(
         _getStatusText(status),
-        style: const TextStyle(color: Colors.white, fontSize: 12),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white),
       ),
       backgroundColor: color,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -527,7 +830,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
     return Chip(
       label: Text(
         _getFeedbackTypeText(type),
-        style: const TextStyle(fontSize: 12),
+        style: Theme.of(context).textTheme.bodyMedium,
       ),
       backgroundColor: Color(0xFF228B22).withOpacity(0.1),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -538,7 +841,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
     return Chip(
       label: Text(
         _getFeedbackCategoryText(category),
-        style: const TextStyle(fontSize: 12),
+        style: Theme.of(context).textTheme.bodyMedium,
       ),
       backgroundColor: Color(0xFF228B22).withOpacity(0.1),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -564,6 +867,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
       subject: _subjectController.text.trim(),
       message: _messageController.text.trim(),
       rating: _rating,
+      attachments: _attachedFiles,
+      priority: _selectedPriority,
       createdAt: DateTime.now(),
     );
 
@@ -587,7 +892,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
         setState(() {
           _selectedType = FeedbackModel.FeedbackType.suggestion;
           _selectedCategory = FeedbackModel.FeedbackCategory.ui;
+          _selectedPriority = FeedbackModel.FeedbackPriority.medium;
           _rating = 5;
+          _attachedFiles.clear();
         });
         
         // Switch to history tab
@@ -671,5 +978,298 @@ class _FeedbackScreenState extends State<FeedbackScreen> with TickerProviderStat
 
   String _formatDateTime(DateTime dateTime) {
     return '${dateTime.day}/${dateTime.month}/${dateTime.year} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _getPriorityText(FeedbackModel.FeedbackPriority priority) {
+    switch (priority) {
+      case FeedbackModel.FeedbackPriority.low:
+        return 'ต่ำ';
+      case FeedbackModel.FeedbackPriority.medium:
+        return 'ปานกลาง';
+      case FeedbackModel.FeedbackPriority.high:
+        return 'สูง';
+      case FeedbackModel.FeedbackPriority.urgent:
+        return 'เร่งด่วน';
+    }
+  }
+
+  Future<void> _pickFiles() async {
+    // File picker disabled for web compatibility
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('การแนบไฟล์จะเปิดใช้งานในเวอร์ชันถัดไป')),
+    );
+  }
+
+  Widget _buildAnalyticsDashboard() {
+    return Consumer<FeedbackProvider>(
+      builder: (context, feedbackProvider, child) {
+        final stats = feedbackProvider.getStatistics();
+        final avgRating = feedbackProvider.getAverageRating();
+        
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(ResponsiveHelper.getCardSpacing(context)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.analytics,
+                        size: 64,
+                        color: Color(0xFF228B22),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'สถิติและวิเคราะห์ข้อเสนอแนะ',
+                        style: Theme.of(context).textTheme.headlineSmall,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'ภาพรวมข้อเสนอแนะและความคิดเห็นทั้งหมด',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Summary Cards
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      'ทั้งหมด',
+                      '${stats['total']}',
+                      Icons.feedback,
+                      Color(0xFF228B22),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      'คะแนนเฉลี่ย',
+                      '${avgRating.toStringAsFixed(1)}',
+                      Icons.star,
+                      Color(0xFFDAA520),
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Status Distribution
+              Text(
+                'สถานะข้อเสนอแนะ',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      'รอดำเนินการ',
+                      '${stats['pending']}',
+                      Icons.pending,
+                      Color(0xFFDAA520),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildStatCard(
+                      'กำลังดำเนินการ',
+                      '${stats['inProgress']}',
+                      Icons.work,
+                      Color(0xFF228B22),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildStatCard(
+                      'แก้ไขแล้ว',
+                      '${stats['resolved']}',
+                      Icons.check_circle,
+                      Color(0xFF228B22),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildStatCard(
+                      'ปิดเรื่อง',
+                      '${stats['closed']}',
+                      Icons.close,
+                      Color(0xFF8B4513),
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Type Distribution
+              Text(
+                'ประเภทข้อเสนอแนะ',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          'ข้อเสนอแนะ',
+                          '${stats['suggestions']}',
+                          Icons.lightbulb,
+                          Color(0xFF228B22),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildStatCard(
+                          'แจ้งปัญหา',
+                          '${stats['bugs']}',
+                          Icons.bug_report,
+                          Color(0xFFCD5C5C),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildStatCard(
+                          'ขอฟีเจอร์ใหม่',
+                          '${stats['features']}',
+                          Icons.new_releases,
+                          Color(0xFFDAA520),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          'ร้องเรียน',
+                          '${stats['complaints']}',
+                          Icons.report_problem,
+                          Color(0xFFCD5C5C),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _buildStatCard(
+                          'ชื่นชม',
+                          '${stats['compliments']}',
+                          Icons.thumb_up,
+                          Color(0xFF228B22),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(child: Container()), // Empty space
+                    ],
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Recent Activity
+              Text(
+                'กิจกรรมล่าสุด',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: feedbackProvider.feedbacks.take(3).map((feedback) {
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: _getTypeColor(feedback.type),
+                          child: Icon(
+                            _getTypeIcon(feedback.type),
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        title: Text(feedback.subject),
+                        subtitle: Text('${feedback.userName} • ${_formatDateTime(feedback.createdAt)}'),
+                        trailing: _buildStatusChip(feedback.status),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getTypeColor(FeedbackModel.FeedbackType type) {
+    switch (type) {
+      case FeedbackModel.FeedbackType.suggestion:
+        return Color(0xFF228B22);
+      case FeedbackModel.FeedbackType.bug:
+        return Color(0xFFCD5C5C);
+      case FeedbackModel.FeedbackType.feature:
+        return Color(0xFFDAA520);
+      case FeedbackModel.FeedbackType.complaint:
+        return Color(0xFFCD5C5C);
+      case FeedbackModel.FeedbackType.compliment:
+        return Color(0xFF228B22);
+    }
+  }
+
+  IconData _getTypeIcon(FeedbackModel.FeedbackType type) {
+    switch (type) {
+      case FeedbackModel.FeedbackType.suggestion:
+        return Icons.lightbulb;
+      case FeedbackModel.FeedbackType.bug:
+        return Icons.bug_report;
+      case FeedbackModel.FeedbackType.feature:
+        return Icons.new_releases;
+      case FeedbackModel.FeedbackType.complaint:
+        return Icons.report_problem;
+      case FeedbackModel.FeedbackType.compliment:
+        return Icons.thumb_up;
+    }
   }
 }

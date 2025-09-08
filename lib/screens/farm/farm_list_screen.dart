@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/farm_record_provider.dart';
 import '../../models/farm_record.dart';
 import '../../utils/responsive_helper.dart';
@@ -40,6 +41,19 @@ class _FarmListScreenState extends State<FarmListScreen> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF228B22).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.home_rounded, size: 28),
+            color: const Color(0xFF228B22).withOpacity(0.8),
+            onPressed: () => context.go('/dashboard'),
+            tooltip: 'หน้าแรก',
+          ),
+        ),
       ),
       body: Consumer<FarmRecordProvider>(
         builder: (context, provider, child) {

@@ -51,7 +51,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
         titleTextStyle: TextStyle(
-          fontSize: 20,
+          fontSize: 24,
           fontWeight: FontWeight.bold,
           color: Colors.black87,
         ),
@@ -73,64 +73,64 @@ class AppTheme {
             borderRadius: BorderRadius.circular(8),
           ),
           textStyle: const TextStyle(
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: FontWeight.w600,
             ),
         ),
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
-          fontSize: 32,
+          fontSize: 40,
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
         ),
         displayMedium: TextStyle(
-          fontSize: 28,
+          fontSize: 36,
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
         ),
         displaySmall: TextStyle(
-          fontSize: 24,
+          fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
         ),
         headlineLarge: TextStyle(
-          fontSize: 22,
+          fontSize: 28,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
         ),
         headlineMedium: TextStyle(
-          fontSize: 20,
+          fontSize: 24,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
         ),
         headlineSmall: TextStyle(
-          fontSize: 18,
+          fontSize: 22,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
         ),
         titleLarge: TextStyle(
-          fontSize: 16,
+          fontSize: 20,
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
         ),
         titleMedium: TextStyle(
-          fontSize: 14,
+          fontSize: 18,
           fontWeight: FontWeight.w500,
           color: textPrimaryColor,
         ),
         bodyLarge: TextStyle(
-          fontSize: 16,
+          fontSize: 18,
           fontWeight: FontWeight.normal,
           color: textPrimaryColor,
         ),
         bodyMedium: TextStyle(
-          fontSize: 14,
+          fontSize: 16,
           fontWeight: FontWeight.normal,
           color: textSecondaryColor,
         ),
         bodySmall: TextStyle(
-          fontSize: 12,
+          fontSize: 16,
           fontWeight: FontWeight.normal,
           color: textSecondaryColor,
         ),
@@ -154,7 +154,11 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: errorColor),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        labelStyle: const TextStyle(fontSize: 16),
+        hintStyle: const TextStyle(fontSize: 16),
+        helperStyle: const TextStyle(fontSize: 16),
+        errorStyle: const TextStyle(fontSize: 16),
       ),
     );
   }

@@ -39,10 +39,26 @@ enum LivestockType {
   // นกกระทา
   quailMeat('นกกระทาเนื้อ'),
   quailEgg('นกกระทาไข่'),
+  quailBreeder('นกกระทาพ่อแม่พันธุ์'),
   
   // สัตว์เลี้ยง
   dog('สุนัข'),
   cat('แมว'),
+  rabbit('กระต่าย'),
+  hamster('หนูแฮมสเตอร์'),
+  bird('นกสวยงาม'),
+  fish('ปลาสวยงาม'),
+  
+  // สัตว์น้ำ
+  fishFreshwater('ปลาน้ำจืด'),
+  fishSaltwater('ปลาน้ำเค็ม'),
+  shrimp('กุ้ง'),
+  crab('ปู'),
+  
+  // แมลง
+  cricket('จิ้งหรีด'),
+  silkworm('หนอนไหม'),
+  bee('ผึ้ง'),
   
   // อื่นๆ
   other('อื่นๆ');

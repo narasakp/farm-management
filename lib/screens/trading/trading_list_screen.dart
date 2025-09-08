@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/trading_provider.dart';
 import '../../models/trading_record.dart';
 
@@ -35,8 +36,21 @@ class _TradingListScreenState extends State<TradingListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('รายการซื้อขาย'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: const Color(0xFF228B22),
+        foregroundColor: Colors.white,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.home_rounded, size: 28),
+            color: Colors.white,
+            onPressed: () => context.go('/dashboard'),
+            tooltip: 'หน้าแรก',
+          ),
+        ),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,

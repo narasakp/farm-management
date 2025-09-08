@@ -39,9 +39,7 @@ class FinancialSummaryChart extends StatelessWidget {
                   );
                 }
 
-                final farmId = farmProvider.selectedFarm!.id;
-                final startDate = DateTime.now().subtract(const Duration(days: 30));
-                final endDate = DateTime.now();
+                // Remove unused variables
                 
                 final income = financialProvider.getTotalIncome(farmProvider.selectedFarm?.id ?? '');
                 final expense = financialProvider.getTotalExpense(farmProvider.selectedFarm?.id ?? '');
@@ -142,7 +140,7 @@ class FinancialSummaryChart extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: const Color(0xFF228B22).withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(

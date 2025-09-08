@@ -69,7 +69,7 @@ extension HealthRecordTypeExtension on HealthRecordType {
       case HealthRecordType.injury:
         return Colors.deepOrange;
       case HealthRecordType.illness:
-        return Colors.red.shade300;
+        return Colors.red.withOpacity(0.6);
       case HealthRecordType.preventive:
         return Colors.purple;
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/trading_provider.dart';
 import '../../models/trading.dart';
 import '../../models/livestock.dart';
@@ -54,6 +55,24 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
     return Scaffold(
       appBar: AppBar(
         title: const Text('ตลาดปศุสัตว์'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF228B22).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.home_rounded, size: 28),
+            color: const Color(0xFF228B22).withOpacity(0.8),
+            onPressed: () => context.go('/dashboard'),
+            tooltip: 'หน้าแรก',
+          ),
+        ),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -263,7 +282,7 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
                     Text(
                       '฿${listing['price'].toStringAsFixed(0)}/${listing['unit']}',
                       style: TextStyle(
-                        color: Colors.green.shade700,
+                        backgroundColor: const Color(0xFF8B4513),
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -310,13 +329,13 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.red.shade100,
+                              color: Colors.red.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               'ขายแล้ว',
                               style: TextStyle(
-                                color: Colors.red.shade700,
+                                color: Colors.red.withOpacity(0.8),
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -427,7 +446,7 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
                       Text(
                         '฿${listing.askingPrice.toStringAsFixed(0)}',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.green.shade700,
+                          backgroundColor: const Color(0xFF8B4513),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -488,7 +507,7 @@ class _MarketScreenState extends State<MarketScreen> with TickerProviderStateMix
     
     return Chip(
       label: Text(text, style: const TextStyle(fontSize: 12)),
-      backgroundColor: color.withOpacity(0.1),
+      backgroundColor: color.withValues(alpha: 0.1),
       side: BorderSide(color: color),
     );
   }

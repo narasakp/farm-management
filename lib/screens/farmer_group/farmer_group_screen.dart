@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/farmer_group_provider.dart';
 import '../../models/farmer_group.dart';
 import '../../utils/app_theme.dart';
@@ -39,6 +40,19 @@ class _FarmerGroupScreenState extends State<FarmerGroupScreen>
         title: const Text('กลุ่มเกษตรกร'),
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.home_rounded, size: 28),
+            color: Colors.white,
+            onPressed: () => context.go('/dashboard'),
+            tooltip: 'หน้าแรก',
+          ),
+        ),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,

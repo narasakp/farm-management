@@ -147,11 +147,34 @@ class LivestockSummaryChart extends StatelessWidget {
         return 'แกะ';
       case LivestockType.quailMeat:
       case LivestockType.quailEgg:
+      case LivestockType.quailBreeder:
         return 'นกกระทา';
       case LivestockType.dog:
         return 'สุนัข';
       case LivestockType.cat:
         return 'แมว';
+      case LivestockType.rabbit:
+        return 'กระต่าย';
+      case LivestockType.hamster:
+        return 'แฮมสเตอร์';
+      case LivestockType.fishFreshwater:
+        return 'ปลาน้ำจืด';
+      case LivestockType.fishSaltwater:
+        return 'ปลาน้ำเค็ม';
+      case LivestockType.bird:
+        return 'นก';
+      case LivestockType.fish:
+        return 'ปลา';
+      case LivestockType.shrimp:
+        return 'กุ้ง';
+      case LivestockType.crab:
+        return 'ปู';
+      case LivestockType.cricket:
+        return 'จิ้งหรีด';
+      case LivestockType.silkworm:
+        return 'หนอนไหม';
+      case LivestockType.bee:
+        return 'ผึ้ง';
       case LivestockType.other:
         return 'อื่นๆ';
     }
@@ -189,13 +212,29 @@ class LivestockSummaryChart extends StatelessWidget {
         return Colors.purple;
       case LivestockType.quailMeat:
       case LivestockType.quailEgg:
+      case LivestockType.quailBreeder:
         return Colors.teal;
       case LivestockType.dog:
-        return Colors.blue;
       case LivestockType.cat:
-        return Colors.indigo;
+      case LivestockType.rabbit:
+      case LivestockType.hamster:
+        return Colors.purple;
+      case LivestockType.fishFreshwater:
+        return Colors.lightBlue;
+      case LivestockType.fishSaltwater:
+        return Colors.deepOrange;
+      case LivestockType.bird:
+      case LivestockType.fish:
+        return Colors.blue;
+      case LivestockType.shrimp:
+      case LivestockType.crab:
+        return Colors.cyan;
+      case LivestockType.cricket:
+      case LivestockType.silkworm:
+      case LivestockType.bee:
+        return Colors.amber;
       case LivestockType.other:
-        return Colors.grey.shade400;
+        return Colors.blue.withOpacity(0.6);
     }
   }
 }

@@ -35,7 +35,7 @@ class _BreedingManagementScreenState extends State<BreedingManagementScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('จัดการการผสมพันธุ์'),
-        backgroundColor: const Color(0xFF8B4513).shade700,
+        backgroundColor: const Color(0xFF8B4513),
         foregroundColor: Colors.white,
         bottom: TabBar(
           controller: _tabController,
@@ -61,7 +61,7 @@ class _BreedingManagementScreenState extends State<BreedingManagementScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error, size: 64, color: const Color(0xFFCD5C5C).shade300),
+                  Icon(Icons.error, size: 64, color: const Color(0xFFCD5C5C).withOpacity(0.6)),
                   const SizedBox(height: 16),
                   Text(breedingProvider.error!),
                   const SizedBox(height: 16),
@@ -87,7 +87,7 @@ class _BreedingManagementScreenState extends State<BreedingManagementScreen>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddBreedingDialog(context),
-        backgroundColor: const Color(0xFF8B4513).shade700,
+        backgroundColor: const Color(0xFF8B4513),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -190,7 +190,7 @@ class _BreedingManagementScreenState extends State<BreedingManagementScreen>
                 borderRadius: BorderRadius.circular(12),
               ),
               filled: true,
-              fillColor: const Color(0xFFDAA520).shade100,
+              fillColor: const Color(0xFFDAA520).withOpacity(0.2),
             ),
             onChanged: (value) {
               setState(() {
@@ -269,7 +269,7 @@ class _BreedingManagementScreenState extends State<BreedingManagementScreen>
                 borderRadius: BorderRadius.circular(12),
               ),
               filled: true,
-              fillColor: const Color(0xFFDAA520).shade100,
+              fillColor: const Color(0xFFDAA520).withOpacity(0.2),
             ),
             onChanged: (value) {
               setState(() {
@@ -463,7 +463,7 @@ class _BreedingManagementScreenState extends State<BreedingManagementScreen>
   Widget _buildUpcomingDeliveryCard(BreedingRecord record) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: const Color(0xFF228B22).shade50,
+      color: const Color(0xFF228B22).withOpacity(0.1),
       child: ListTile(
         leading: const CircleAvatar(
           backgroundColor: const Color(0xFF228B22),
@@ -482,7 +482,7 @@ class _BreedingManagementScreenState extends State<BreedingManagementScreen>
   Widget _buildOverdueDeliveryCard(BreedingRecord record) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: const Color(0xFFCD5C5C).shade50,
+      color: const Color(0xFFCD5C5C).withOpacity(0.1),
       child: ListTile(
         leading: const CircleAvatar(
           backgroundColor: const Color(0xFFCD5C5C),

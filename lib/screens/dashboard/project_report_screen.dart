@@ -126,7 +126,7 @@ class _ProjectReportScreenState extends State<ProjectReportScreen> {
           ),
           child: IconButton(
             icon: const Icon(Icons.home_rounded, size: 28),
-            color: const Color(0xFF228B22)[700],
+            color: const Color(0xFF228B22).withOpacity(0.8),
             onPressed: () => context.go('/dashboard'),
             tooltip: 'หน้าแรก',
           ),
@@ -145,7 +145,7 @@ class _ProjectReportScreenState extends State<ProjectReportScreen> {
                   : const Icon(Icons.refresh),
               label: Text(_isRefreshing ? 'กำลังอัปเดต...' : 'อัปเดตข้อมูล'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF228B22)[600],
+                backgroundColor: const Color(0xFF228B22).withOpacity(0.7),
                 foregroundColor: Colors.white,
                 elevation: 2,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -185,7 +185,7 @@ class _ProjectReportScreenState extends State<ProjectReportScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.analytics, color: const Color(0xFF228B22)[600], size: 28),
+                Icon(Icons.analytics, color: const Color(0xFF228B22).withOpacity(0.7), size: 28),
                 const SizedBox(width: 12),
                 const Text(
                   'ภาพรวมโปรเจกต์',
@@ -205,7 +205,7 @@ class _ProjectReportScreenState extends State<ProjectReportScreen> {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.code, color: const Color(0xFF228B22)[600], size: 20),
+                Icon(Icons.code, color: const Color(0xFF228B22).withOpacity(0.7), size: 20),
                 const SizedBox(width: 8),
                 const Text(
                   'ขนาดโครงการ',
@@ -273,13 +273,13 @@ class _ProjectReportScreenState extends State<ProjectReportScreen> {
                 ? Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF8B4513)[100],
+                      color: const Color(0xFF8B4513).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       value,
                       style: TextStyle(
-                        color: const Color(0xFF8B4513)[800],
+                        color: const Color(0xFF8B4513).withOpacity(0.9),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -370,7 +370,7 @@ class _ProjectReportScreenState extends State<ProjectReportScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.timeline, color: const Color(0xFF8B4513)[600], size: 28),
+                Icon(Icons.timeline, color: const Color(0xFF8B4513).withOpacity(0.7), size: 28),
                 const SizedBox(width: 12),
                 const Text(
                   'ความคืบหน้าการพัฒนา',
@@ -442,7 +442,7 @@ class _ProjectReportScreenState extends State<ProjectReportScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.assessment, color: const Color(0xFF8B4513)[600], size: 28),
+                Icon(Icons.assessment, color: const Color(0xFF8B4513).withOpacity(0.7), size: 28),
                 const SizedBox(width: 12),
                 const Text(
                   'การวิเคราะห์ Effort',
@@ -619,7 +619,7 @@ class _ProjectReportScreenState extends State<ProjectReportScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.flag, color: const Color(0xFFCD5C5C)[600], size: 28),
+                Icon(Icons.flag, color: const Color(0xFFCD5C5C).withOpacity(0.7), size: 28),
                 const SizedBox(width: 12),
                 const Text(
                   'Timeline & Milestones',
