@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="livestock_farm_management">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>livestock_farm_management</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+  
+  <!-- Floating Feedback Icon -->
+  <div id="floating-feedback" style="
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: #DAA520;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
+    z-index: 1000;
+    transition: all 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+  " title="ข้อเสนอแนะ">
+    <span style="font-size: 24px; color: white;">💬</span>
+  </div>
+
+  <script>
+    // Show/hide feedback icon based on current page and login status
+    function updateFeedbackIconVisibility() {
+      const feedbackIcon = document.getElementById('floating-feedback');
+      const currentPath = window.location.hash || window.location.pathname;
+      
+      // Hide on login/register pages or initial load (no hash)
+      if (currentPath.includes('login') || 
+          currentPath.includes('register') || 
+          currentPath === '' || 
+          currentPath === '/' || 
+          currentPath === '#/') {
+        feedbackIcon.style.opacity = '0';
+        feedbackIcon.style.visibility = 'hidden';
+      } else if (currentPath.includes('#/feedback')) {
+        // Hide feedback icon on feedback page itself
+        feedbackIcon.style.opacity = '0';
+        feedbackIcon.style.visibility = 'hidden';
+      } else if (currentPath.includes('#/dashboard') || 
+                 currentPath.includes('#/livestock') ||
+                 currentPath.includes('#/trading') ||
+                 currentPath.includes('#/transport') ||
+                 currentPath.includes('#/research-development')) {
+        // Only show if we're on authenticated pages (except feedback page)
+        feedbackIcon.style.opacity = '1';
+        feedbackIcon.style.visibility = 'visible';
+      } else {
+        // Default to hidden for unknown routes
+        feedbackIcon.style.opacity = '0';
+        feedbackIcon.style.visibility = 'hidden';
+      }
+    }
+
+    // Navigate to feedback page
+    function navigateToFeedback() {
+      // Use Flutter's router instead of forcing page reload
+      window.location.hash = '#/feedback';
+    }
+
+    // Add click event listener
+    document.addEventListener('DOMContentLoaded', function() {
+      const feedbackIcon = document.getElementById('floating-feedback');
+      
+      // Click handler
+      feedbackIcon.addEventListener('click', navigateToFeedback);
+      
+      // Hover effects
+      feedbackIcon.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.1)';
+        this.style.boxShadow = '0 6px 16px rgba(218, 165, 32, 0.4)';
+      });
+      
+      feedbackIcon.addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1)';
+        this.style.boxShadow = '0 4px 12px rgba(218, 165, 32, 0.3)';
+      });
+      
+      // Initial visibility check
+      updateFeedbackIconVisibility();
+      
+      // Monitor hash changes
+      window.addEventListener('hashchange', updateFeedbackIconVisibility);
+      
+      // Monitor for Flutter route changes (delayed check)
+      setTimeout(updateFeedbackIconVisibility, 1000);
+      setInterval(updateFeedbackIconVisibility, 2000);
+    });
+  </script>
+</body>
+</html>
