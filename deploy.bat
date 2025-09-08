@@ -1,0 +1,16 @@
+@echo off
+echo Building for GitHub Pages...
+flutter build web --release --no-source-maps --no-tree-shake-icons --base-href /farm-management/
+
+echo Adding floating feedback icon...
+powershell -Command "(Get-Content build\web\index.html) -replace '</body>', '  <!-- Floating Feedback Icon -->`n  <div id=\"floating-feedback\" style=\"`n    position: fixed;`n    bottom: 20px;`n    left: 20px;`n    width: 60px;`n    height: 60px;`n    background-color: #DAA520;`n    border-radius: 50%%;`n    display: flex;`n    align-items: center;`n    justify-content: center;`n    cursor: pointer;`n    box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);`n    z-index: 1000;`n    transition: all 0.3s ease;`n    opacity: 0;`n    visibility: hidden;`n  \" title=\"ข้อเสนอแนะ\">`n    <span style=\"font-size: 24px; color: white;\">💬</span>`n  </div>`n`n  <script>`n    function updateFeedbackIconVisibility() {`n      const feedbackIcon = document.getElementById(''floating-feedback'');`n      const currentPath = window.location.hash || window.location.pathname;`n      if (currentPath.includes(''login'') || currentPath.includes(''register'') || currentPath === '''' || currentPath === ''/'' || currentPath === ''#/'') {`n        feedbackIcon.style.opacity = ''0'';`n        feedbackIcon.style.visibility = ''hidden'';`n      } else if (currentPath.includes(''#/feedback'')) {`n        feedbackIcon.style.opacity = ''0'';`n        feedbackIcon.style.visibility = ''hidden'';`n      } else if (currentPath.includes(''#/dashboard'') || currentPath.includes(''#/livestock'') || currentPath.includes(''#/trading'') || currentPath.includes(''#/transport'') || currentPath.includes(''#/research-development'')) {`n        feedbackIcon.style.opacity = ''1'';`n        feedbackIcon.style.visibility = ''visible'';`n      } else {`n        feedbackIcon.style.opacity = ''0'';`n        feedbackIcon.style.visibility = ''hidden'';`n      }`n    }`n    function navigateToFeedback() {`n      window.location.hash = ''#/feedback'';`n    }`n    document.addEventListener(''DOMContentLoaded'', function() {`n      const feedbackIcon = document.getElementById(''floating-feedback'');`n      feedbackIcon.addEventListener(''click'', navigateToFeedback);`n      feedbackIcon.addEventListener(''mouseenter'', function() {`n        this.style.transform = ''scale(1.1)'';`n        this.style.boxShadow = ''0 6px 16px rgba(218, 165, 32, 0.4)'';`n      });`n      feedbackIcon.addEventListener(''mouseleave'', function() {`n        this.style.transform = ''scale(1)'';`n        this.style.boxShadow = ''0 4px 12px rgba(218, 165, 32, 0.3)'';`n      });`n      updateFeedbackIconVisibility();`n      window.addEventListener(''hashchange'', updateFeedbackIconVisibility);`n      setTimeout(updateFeedbackIconVisibility, 1000);`n      setInterval(updateFeedbackIconVisibility, 2000);`n    });`n  </script>`n</body>' | Set-Content build\web\index.html"
+
+echo Committing and pushing to GitHub...
+git add .
+git commit -m "deploy: Version 2.0 with enhanced fonts for GitHub Pages"
+git push origin main
+git subtree push --prefix build/web origin gh-pages
+
+echo Deployment complete!
+echo GitHub Pages: https://narasakp.github.io/farm-management/
+pause
