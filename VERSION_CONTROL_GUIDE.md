@@ -6,7 +6,7 @@
 - **GitHub Tag**: `v1.0`
 - **Commit**: `b246eb4`
 - **GitHub Pages**: https://narasakp.github.io/farm-management/
-- **Status**: Stable production version with 15-card dashboard
+- **Status**: Stable production version with 7-card dashboard
 
 ### Version 2.0.0 (Development)
 - **Status**: In development with font accessibility improvements
@@ -103,7 +103,7 @@ git subtree push --prefix build/web origin gh-pages --force
 
 | Feature | Version 1.0 | Version 2.0 |
 |---------|-------------|-------------|
-| Dashboard Cards | 15 cards | 15 cards |
+| Dashboard Cards | 7 cards | 15 cards |
 | Font Size | Standard (12-16pt) | Enhanced (16-24pt+) |
 | Research Module | Basic/Disabled | Fully Functional |
 | Feedback System | Basic | Enhanced with floating icon |
