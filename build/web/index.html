@@ -46,30 +46,13 @@
     box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
     z-index: 1000;
     transition: all 0.3s ease;
-    opacity: 0;
-    visibility: hidden;
+    opacity: 1;
+    visibility: visible;
   " title="ข้อเสนอแนะ">
     <span style="font-size: 24px; color: white;">💬</span>
   </div>
 
   <script>
-    function updateFeedbackIconVisibility() {
-      const feedbackIcon = document.getElementById('floating-feedback');
-      const currentPath = window.location.hash || window.location.pathname;
-      if (currentPath.includes('login') || currentPath.includes('register') || currentPath === '' || currentPath === '/' || currentPath === '#/') {
-        feedbackIcon.style.opacity = '0';
-        feedbackIcon.style.visibility = 'hidden';
-      } else if (currentPath.includes('#/feedback')) {
-        feedbackIcon.style.opacity = '0';
-        feedbackIcon.style.visibility = 'hidden';
-      } else if (currentPath.includes('#/dashboard') || currentPath.includes('#/livestock') || currentPath.includes('#/trading') || currentPath.includes('#/transport') || currentPath.includes('#/research-development')) {
-        feedbackIcon.style.opacity = '1';
-        feedbackIcon.style.visibility = 'visible';
-      } else {
-        feedbackIcon.style.opacity = '0';
-        feedbackIcon.style.visibility = 'hidden';
-      }
-    }
     function navigateToFeedback() {
       window.location.hash = '#/feedback';
     }
@@ -84,10 +67,6 @@
         this.style.transform = 'scale(1)';
         this.style.boxShadow = '0 4px 12px rgba(218, 165, 32, 0.3)';
       });
-      updateFeedbackIconVisibility();
-      window.addEventListener('hashchange', updateFeedbackIconVisibility);
-      setTimeout(updateFeedbackIconVisibility, 1000);
-      setInterval(updateFeedbackIconVisibility, 2000);
     });
   </script>
 
