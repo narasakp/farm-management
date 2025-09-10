@@ -112,6 +112,77 @@ git subtree push --prefix build/web origin gh-pages --force
 
 ---
 
+## 🚀 **Command Execution Guidelines: CMD vs Windsurf**
+
+### **📋 Windows CMD Commands (แสดงปุ่ม 📋 คัดลอก)**
+
+#### **Git Operations (Safe & Fast):**
+```cmd
+git status
+git add .
+git commit -m "message"
+git push origin main
+git pull origin main
+git log --oneline
+```
+
+#### **Flutter Development:**
+```cmd
+flutter build web --release --no-source-maps --no-tree-shake-icons --base-href="/farm-management/"
+flutter clean
+flutter pub get
+flutter doctor
+```
+
+#### **File Operations:**
+```cmd
+copy build\web\* .
+del filename.txt
+mkdir foldername
+.\deploy.bat
+```
+
+#### **Local Server:**
+```cmd
+python -m http.server 8080 --directory build/web
+```
+
+### **🛡️ Windsurf Run Commands (แสดงปุ่ม ▶️ Run)**
+
+#### **Destructive Operations:**
+```bash
+# ⚠️ อันตราย - ลบไฟล์
+rm -rf folder/
+git reset --hard HEAD
+git push --force
+
+# System Changes
+npm install -g package
+pip install package
+```
+
+#### **Complex Multi-step:**
+```bash
+# Multi-command operations
+flutter build web && git add . && git commit && git push
+
+# File modifications with logic
+find . -name "*.dart" -exec sed -i 's/old/new/g' {} \;
+```
+
+#### **Unknown/First Time:**
+```bash
+# เมื่อไม่แน่ใจผลลัพธ์
+git rebase -i HEAD~5
+docker run complex-command
+```
+
+### **💡 Quick Decision Rules:**
+- **รู้จัก + ปลอดภัย + ใช้บ่อย = 📋 CMD**
+- **อันตราย + ซับซ้อน + ไม่แน่ใจ = ▶️ Windsurf**
+
+---
+
 ## ⚠️ Important Notes
 
 1. **Always test locally** before pushing to production
@@ -119,3 +190,4 @@ git subtree push --prefix build/web origin gh-pages --force
 3. **Keep CHANGELOG.md updated** with each version
 4. **GitHub Pages** automatically deploys from `gh-pages` branch
 5. **Backup important data** before major version changes
+6. **Use CMD for speed**, **Windsurf for safety**
