@@ -30,6 +30,67 @@
   <title>livestock_farm_management</title>
 </head>
 <body>
+  <!-- Floating Feedback Icon -->
+  <div id="floating-feedback" style="
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: #DAA520;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
+    z-index: 1000;
+    transition: all 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+  " title="ข้อเสนอแนะ">
+    <span style="font-size: 24px; color: white;">💬</span>
+  </div>
+
+  <script>
+    function updateFeedbackIconVisibility() {
+      const feedbackIcon = document.getElementById('floating-feedback');
+      const currentPath = window.location.hash || window.location.pathname;
+      if (currentPath.includes('login') || currentPath.includes('register') || currentPath === '' || currentPath === '/' || currentPath === '#/') {
+        feedbackIcon.style.opacity = '0';
+        feedbackIcon.style.visibility = 'hidden';
+      } else if (currentPath.includes('#/feedback')) {
+        feedbackIcon.style.opacity = '0';
+        feedbackIcon.style.visibility = 'hidden';
+      } else if (currentPath.includes('#/dashboard') || currentPath.includes('#/livestock') || currentPath.includes('#/trading') || currentPath.includes('#/transport') || currentPath.includes('#/research-development')) {
+        feedbackIcon.style.opacity = '1';
+        feedbackIcon.style.visibility = 'visible';
+      } else {
+        feedbackIcon.style.opacity = '0';
+        feedbackIcon.style.visibility = 'hidden';
+      }
+    }
+    function navigateToFeedback() {
+      window.location.hash = '#/feedback';
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      const feedbackIcon = document.getElementById('floating-feedback');
+      feedbackIcon.addEventListener('click', navigateToFeedback);
+      feedbackIcon.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.1)';
+        this.style.boxShadow = '0 6px 16px rgba(218, 165, 32, 0.4)';
+      });
+      feedbackIcon.addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1)';
+        this.style.boxShadow = '0 4px 12px rgba(218, 165, 32, 0.3)';
+      });
+      updateFeedbackIconVisibility();
+      window.addEventListener('hashchange', updateFeedbackIconVisibility);
+      setTimeout(updateFeedbackIconVisibility, 1000);
+      setInterval(updateFeedbackIconVisibility, 2000);
+    });
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
