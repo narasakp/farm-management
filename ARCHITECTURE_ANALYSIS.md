@@ -607,6 +607,845 @@ CREATE TABLE livestock (
 
 ### **Phase 2: Backend Development (6-8 weeks)**
 
+#### **2.1 Microservices Architecture Setup**
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    API GATEWAY (Kong/Nginx)                │
+├─────────────────────────────────────────────────────────────┤
+│  • Rate Limiting                                           │
+│  • Authentication Middleware                               │
+│  • Load Balancing                                          │
+│  • Request Routing                                         │
+└─────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│   User      │ │  Livestock  │ │    Farm     │ │   Market    │
+│  Service    │ │   Service   │ │   Service   │ │   Service   │
+│             │ │             │ │             │ │             │
+│ Port: 3001  │ │ Port: 3002  │ │ Port: 3003  │ │ Port: 3004  │
+└─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘
+       ↓               ↓               ↓               ↓
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│ PostgreSQL  │ │ PostgreSQL  │ │ PostgreSQL  │ │ PostgreSQL  │
+│   Users     │ │  Livestock  │ │    Farms    │ │   Market    │
+└─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘
+```
+
+#### **2.2 Service Implementation Example**
+```typescript
+// livestock-service/src/controllers/livestock.controller.ts
+@Controller('/api/v1/livestock')
+export class LivestockController {
+  constructor(private livestockService: LivestockService) {}
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async getAllLivestock(@Req() req: Request) {
+    const userId = req.user.id;
+    return await this.livestockService.findByUserId(userId);
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  async createLivestock(@Body() createDto: CreateLivestockDto, @Req() req: Request) {
+    return await this.livestockService.create({
+      ...createDto,
+      userId: req.user.id
+    });
+  }
+}
+```
+
+---
+
+## 🚀 ขั้นตอนการพัฒนาแบบละเอียด - Flutter PWA + Firebase
+
+### **📋 Phase 1: Firebase Core Integration (2-3 สัปดาห์)**
+
+#### **Week 1: Project Setup & Configuration**
+
+**Day 1-2: Firebase Project Setup**
+```bash
+# 1. สร้าง Firebase Project
+firebase login
+firebase init
+
+# 2. เลือก services ที่ต้องการ
+# ✅ Firestore Database
+# ✅ Authentication  
+# ✅ Functions
+# ✅ Hosting
+# ✅ Storage
+```
+
+**Day 3-4: Flutter Dependencies**
+```yaml
+# pubspec.yaml - เพิ่ม Firebase dependencies
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Firebase Core
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+  firebase_storage: ^11.5.6
+  firebase_analytics: ^10.7.4
+  
+  # State Management
+  flutter_riverpod: ^2.4.9
+  riverpod_annotation: ^2.3.3
+  
+  # Local Storage & Caching
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  
+  # Network & Connectivity
+  dio: ^5.4.0
+  connectivity_plus: ^5.0.2
+  
+  # UI Components
+  material_color_utilities: ^0.5.0
+  cached_network_image: ^3.3.0
+
+dev_dependencies:
+  # Code Generation
+  riverpod_generator: ^2.3.9
+  build_runner: ^2.4.7
+  hive_generator: ^2.0.1
+```
+
+**Day 5-7: Firebase Configuration Files**
+```dart
+// lib/core/firebase/firebase_config.dart
+class FirebaseConfig {
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'your-api-key',
+    appId: 'your-app-id',
+    messagingSenderId: 'your-sender-id',
+    projectId: 'farm-management-th',
+    storageBucket: 'farm-management-th.appspot.com',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'your-web-api-key',
+    appId: 'your-web-app-id',
+    messagingSenderId: 'your-sender-id',
+    projectId: 'farm-management-th',
+    authDomain: 'farm-management-th.firebaseapp.com',
+    storageBucket: 'farm-management-th.appspot.com',
+  );
+}
+```
+
+#### **Week 2: Core Services Implementation**
+
+**Day 8-10: Firebase Initialization**
+```dart
+// lib/main.dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: kIsWeb ? FirebaseConfig.web : FirebaseConfig.android,
+  );
+  
+  // Initialize Hive for local storage
+  await Hive.initFlutter();
+  
+  runApp(ProviderScope(child: FarmManagementApp()));
+}
+
+// lib/core/services/firebase_service.dart
+@riverpod
+class FirebaseService extends _$FirebaseService {
+  @override
+  Future<bool> build() async {
+    try {
+      // Check Firebase connection
+      await FirebaseFirestore.instance.enableNetwork();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  FirebaseFirestore get firestore => FirebaseFirestore.instance;
+  FirebaseAuth get auth => FirebaseAuth.instance;
+  FirebaseStorage get storage => FirebaseStorage.instance;
+}
+```
+
+**Day 11-14: Repository Pattern Setup**
+```dart
+// lib/core/repositories/base_repository.dart
+abstract class BaseRepository<T> {
+  Future<List<T>> getAll();
+  Future<T?> getById(String id);
+  Future<String> create(T item);
+  Future<void> update(String id, T item);
+  Future<void> delete(String id);
+}
+
+// lib/features/livestock/repositories/livestock_repository.dart
+@riverpod
+class LivestockRepository extends _$LivestockRepository implements BaseRepository<Livestock> {
+  @override
+  Future<LivestockRepository> build() async {
+    return LivestockRepository();
+  }
+  
+  @override
+  Future<List<Livestock>> getAll() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+    
+    final snapshot = await FirebaseFirestore.instance
+        .collection('livestock')
+        .where('userId', isEqualTo: user.uid)
+        .orderBy('createdAt', descending: true)
+        .get();
+    
+    return snapshot.docs
+        .map((doc) => Livestock.fromFirestore(doc))
+        .toList();
+  }
+  
+  @override
+  Future<String> create(Livestock livestock) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+    
+    final docRef = await FirebaseFirestore.instance
+        .collection('livestock')
+        .add({
+      ...livestock.toMap(),
+      'userId': user.uid,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    
+    return docRef.id;
+  }
+}
+```
+
+#### **Week 3: Data Models & Offline Support**
+
+**Day 15-17: Firestore Data Models**
+```dart
+// lib/models/livestock.dart
+@HiveType(typeId: 0)
+class Livestock extends Equatable {
+  @HiveField(0)
+  final String id;
+  
+  @HiveField(1)
+  final String type;
+  
+  @HiveField(2)
+  final String breed;
+  
+  @HiveField(3)
+  final int quantity;
+  
+  @HiveField(4)
+  final DateTime createdAt;
+  
+  @HiveField(5)
+  final String userId;
+
+  const Livestock({
+    required this.id,
+    required this.type,
+    required this.breed,
+    required this.quantity,
+    required this.createdAt,
+    required this.userId,
+  });
+
+  // Firestore serialization
+  factory Livestock.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Livestock(
+      id: doc.id,
+      type: data['type'] ?? '',
+      breed: data['breed'] ?? '',
+      quantity: data['quantity'] ?? 0,
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      userId: data['userId'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'type': type,
+      'breed': breed,
+      'quantity': quantity,
+      'createdAt': createdAt,
+      'userId': userId,
+    };
+  }
+
+  @override
+  List<Object?> get props => [id, type, breed, quantity, createdAt, userId];
+}
+```
+
+**Day 18-21: Offline-First Architecture**
+```dart
+// lib/core/services/offline_service.dart
+@riverpod
+class OfflineService extends _$OfflineService {
+  late Box<Livestock> _livestockBox;
+  late Box<Farm> _farmBox;
+  
+  @override
+  Future<void> build() async {
+    // Initialize Hive boxes
+    _livestockBox = await Hive.openBox<Livestock>('livestock');
+    _farmBox = await Hive.openBox<Farm>('farms');
+  }
+  
+  // Cache livestock data
+  Future<void> cacheLivestock(List<Livestock> livestock) async {
+    await _livestockBox.clear();
+    for (final item in livestock) {
+      await _livestockBox.put(item.id, item);
+    }
+  }
+  
+  // Get cached livestock
+  List<Livestock> getCachedLivestock() {
+    return _livestockBox.values.toList();
+  }
+  
+  // Check if data is fresh (less than 5 minutes old)
+  bool isDataFresh(String key) {
+    final lastSync = _livestockBox.get('${key}_last_sync');
+    if (lastSync == null) return false;
+    
+    final now = DateTime.now();
+    final syncTime = DateTime.parse(lastSync);
+    return now.difference(syncTime).inMinutes < 5;
+  }
+}
+```
+
+---
+
+### **📋 Phase 2: Authentication Migration (2-3 สัปดาห์)**
+
+#### **Week 4: Firebase Authentication Setup**
+
+**Day 22-24: Phone Authentication Implementation**
+```dart
+// lib/features/auth/providers/auth_provider.dart
+@riverpod
+class AuthProvider extends _$AuthProvider {
+  @override
+  Future<User?> build() async {
+    // Listen to auth state changes
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      state = AsyncValue.data(user);
+    });
+    
+    return FirebaseAuth.instance.currentUser;
+  }
+  
+  Future<void> verifyPhoneNumber(String phoneNumber) async {
+    state = const AsyncValue.loading();
+    
+    try {
+      await FirebaseAuth.instance.verifyPhoneNumber(
+        phoneNumber: '+66${phoneNumber.replaceFirst('0', '')}',
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await FirebaseAuth.instance.signInWithCredential(credential);
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          state = AsyncValue.error(e, StackTrace.current);
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          // Navigate to OTP screen
+          ref.read(verificationIdProvider.notifier).state = verificationId;
+        },
+        timeout: const Duration(seconds: 60),
+      );
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+    }
+  }
+  
+  Future<void> verifyOTP(String verificationId, String otp) async {
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: otp,
+      );
+      
+      await FirebaseAuth.instance.signInWithCredential(credential);
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+    }
+  }
+  
+  Future<void> signOut() async {
+    await FirebaseAuth.instance.signOut();
+    // Clear local cache
+    await Hive.deleteBoxFromDisk('livestock');
+    await Hive.deleteBoxFromDisk('farms');
+  }
+}
+```
+
+**Day 25-28: User Profile Management**
+```dart
+// lib/features/auth/models/user_profile.dart
+@HiveType(typeId: 1)
+class UserProfile extends Equatable {
+  @HiveField(0)
+  final String uid;
+  
+  @HiveField(1)
+  final String phoneNumber;
+  
+  @HiveField(2)
+  final String? displayName;
+  
+  @HiveField(3)
+  final String? photoURL;
+  
+  @HiveField(4)
+  final DateTime createdAt;
+  
+  @HiveField(5)
+  final Map<String, dynamic> settings;
+
+  const UserProfile({
+    required this.uid,
+    required this.phoneNumber,
+    this.displayName,
+    this.photoURL,
+    required this.createdAt,
+    this.settings = const {},
+  });
+
+  factory UserProfile.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return UserProfile(
+      uid: doc.id,
+      phoneNumber: data['phoneNumber'] ?? '',
+      displayName: data['displayName'],
+      photoURL: data['photoURL'],
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      settings: Map<String, dynamic>.from(data['settings'] ?? {}),
+    );
+  }
+
+  @override
+  List<Object?> get props => [uid, phoneNumber, displayName, photoURL, createdAt, settings];
+}
+```
+
+---
+
+### **📋 Phase 3: Firestore Data Migration (3-4 สัปดาห์)**
+
+#### **Week 5-6: Database Structure Design**
+
+**Firestore Collections Structure:**
+```
+farm_management/
+├── users/
+│   └── {userId}/
+│       ├── profile: UserProfile
+│       ├── settings: UserSettings
+│       └── metadata: { lastLogin, deviceInfo }
+│
+├── farms/
+│   └── {farmId}/
+│       ├── info: { name, location, ownerId, type }
+│       ├── members: { userId: role }
+│       └── statistics: { totalLivestock, lastUpdate }
+│
+├── livestock/
+│   └── {livestockId}/
+│       ├── basic: { type, breed, quantity, farmId }
+│       ├── health: { vaccinations, treatments, checkups }
+│       ├── breeding: { parents, offspring, cycles }
+│       └── financial: { purchasePrice, currentValue, expenses }
+│
+├── feed_records/
+│   └── {recordId}/
+│       ├── info: { feedType, quantity, cost, date }
+│       ├── livestock: { livestockIds, distribution }
+│       └── supplier: { name, contact, batch }
+│
+├── health_records/
+│   └── {recordId}/
+│       ├── info: { type, date, veterinarian, notes }
+│       ├── livestock: { livestockId, symptoms, treatment }
+│       └── follow_up: { nextCheckup, medications }
+│
+└── marketplace/
+    └── {productId}/
+        ├── info: { title, description, price, category }
+        ├── seller: { userId, farmId, contact }
+        ├── images: { urls, thumbnails }
+        └── status: { available, sold, reserved }
+```
+
+#### **Week 7-8: Data Migration Implementation**
+
+**Migration Service:**
+```dart
+// lib/core/services/migration_service.dart
+@riverpod
+class MigrationService extends _$MigrationService {
+  @override
+  Future<bool> build() async {
+    return await _checkMigrationStatus();
+  }
+  
+  Future<void> migrateFromLocalStorage() async {
+    final batch = FirebaseFirestore.instance.batch();
+    final user = FirebaseAuth.instance.currentUser;
+    
+    if (user == null) throw Exception('User not authenticated');
+    
+    try {
+      // 1. Migrate Livestock Data
+      await _migrateLivestockData(batch, user.uid);
+      
+      // 2. Migrate Farm Data
+      await _migrateFarmData(batch, user.uid);
+      
+      // 3. Migrate Feed Records
+      await _migrateFeedRecords(batch, user.uid);
+      
+      // 4. Commit all changes
+      await batch.commit();
+      
+      // 5. Mark migration as complete
+      await _markMigrationComplete(user.uid);
+      
+    } catch (e) {
+      throw Exception('Migration failed: $e');
+    }
+  }
+  
+  Future<void> _migrateLivestockData(WriteBatch batch, String userId) async {
+    // Get data from SharedPreferences/local storage
+    final localLivestock = await _getLocalLivestockData();
+    
+    for (final livestock in localLivestock) {
+      final docRef = FirebaseFirestore.instance
+          .collection('livestock')
+          .doc();
+      
+      batch.set(docRef, {
+        ...livestock.toMap(),
+        'userId': userId,
+        'migrated': true,
+        'migratedAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+}
+```
+
+---
+
+### **📋 Phase 4: Offline Capabilities & Optimization (2-3 สัปดาห์)**
+
+#### **Week 9: Advanced Caching Strategy**
+
+```dart
+// lib/core/services/smart_cache_service.dart
+@riverpod
+class SmartCacheService extends _$SmartCacheService {
+  @override
+  Future<void> build() async {
+    await _initializeCacheBoxes();
+  }
+  
+  Future<List<T>> getCachedData<T>({
+    required String cacheKey,
+    required Future<List<T>> Function() fetchFunction,
+    Duration maxAge = const Duration(minutes: 5),
+  }) async {
+    // Check if we have cached data
+    final cachedData = await _getCachedData<T>(cacheKey);
+    final lastUpdate = await _getLastUpdateTime(cacheKey);
+    
+    // If cache is fresh, return it
+    if (cachedData != null && lastUpdate != null) {
+      final age = DateTime.now().difference(lastUpdate);
+      if (age < maxAge) {
+        return cachedData;
+      }
+    }
+    
+    // Check network connectivity
+    final connectivity = await Connectivity().checkConnectivity();
+    
+    if (connectivity == ConnectivityResult.none) {
+      // Offline: return cached data even if stale
+      return cachedData ?? [];
+    }
+    
+    try {
+      // Online: fetch fresh data
+      final freshData = await fetchFunction();
+      
+      // Cache the fresh data
+      await _cacheData(cacheKey, freshData);
+      await _setLastUpdateTime(cacheKey, DateTime.now());
+      
+      return freshData;
+    } catch (e) {
+      // Network error: fallback to cached data
+      return cachedData ?? [];
+    }
+  }
+}
+```
+
+#### **Week 10-11: Performance Optimization**
+
+**Lazy Loading Implementation:**
+```dart
+// lib/features/livestock/providers/livestock_provider.dart
+@riverpod
+class LivestockProvider extends _$LivestockProvider {
+  @override
+  Future<List<Livestock>> build() async {
+    return await _loadLivestockWithPagination();
+  }
+  
+  Future<List<Livestock>> _loadLivestockWithPagination({
+    int limit = 20,
+    DocumentSnapshot? startAfter,
+  }) async {
+    Query query = FirebaseFirestore.instance
+        .collection('livestock')
+        .where('userId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+        .orderBy('createdAt', descending: true)
+        .limit(limit);
+    
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+    
+    final snapshot = await query.get();
+    return snapshot.docs
+        .map((doc) => Livestock.fromFirestore(doc))
+        .toList();
+  }
+  
+  Future<void> loadMore() async {
+    final currentData = state.value ?? [];
+    if (currentData.isEmpty) return;
+    
+    // Get the last document for pagination
+    final lastDoc = await FirebaseFirestore.instance
+        .collection('livestock')
+        .doc(currentData.last.id)
+        .get();
+    
+    final moreData = await _loadLivestockWithPagination(
+      startAfter: lastDoc,
+    );
+    
+    state = AsyncValue.data([...currentData, ...moreData]);
+  }
+}
+```
+
+---
+
+## 🔧 เครื่องมือและ Dependencies ที่จำเป็น
+
+### **Development Tools**
+```bash
+# Flutter SDK
+flutter --version  # ต้อง >= 3.16.0
+
+# Firebase CLI
+npm install -g firebase-tools
+firebase --version
+
+# Code Generation Tools
+dart pub global activate build_runner
+dart pub global activate riverpod_generator
+```
+
+### **VS Code Extensions**
+```json
+{
+  "recommendations": [
+    "dart-code.flutter",
+    "dart-code.dart-code",
+    "ms-vscode.vscode-json",
+    "bradlc.vscode-tailwindcss",
+    "firebase.firebase-vscode"
+  ]
+}
+```
+
+### **Project Structure**
+```
+lib/
+├── core/
+│   ├── config/
+│   │   ├── firebase_config.dart
+│   │   └── app_config.dart
+│   ├── services/
+│   │   ├── firebase_service.dart
+│   │   ├── offline_service.dart
+│   │   └── migration_service.dart
+│   ├── repositories/
+│   │   └── base_repository.dart
+│   └── utils/
+│       ├── constants.dart
+│       └── helpers.dart
+├── features/
+│   ├── auth/
+│   │   ├── models/
+│   │   ├── providers/
+│   │   ├── repositories/
+│   │   └── screens/
+│   ├── livestock/
+│   │   ├── models/
+│   │   ├── providers/
+│   │   ├── repositories/
+│   │   └── screens/
+│   └── dashboard/
+│       ├── models/
+│       ├── providers/
+│       └── screens/
+├── shared/
+│   ├── widgets/
+│   ├── themes/
+│   └── constants/
+└── main.dart
+```
+
+---
+
+## 🚀 Deployment Strategy
+
+### **Development Environment**
+```yaml
+# firebase.json
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [{
+      "source": "**",
+      "destination": "/index.html"
+    }]
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs18"
+  }
+}
+```
+
+### **Production Deployment Commands**
+```bash
+# Build for production
+flutter build web --release --web-renderer canvaskit
+
+# Deploy to Firebase Hosting
+firebase deploy --only hosting
+
+# Deploy Firestore rules
+firebase deploy --only firestore:rules
+
+# Deploy Cloud Functions
+firebase deploy --only functions
+```
+
+---
+
+## 📊 Monitoring & Analytics
+
+### **Firebase Analytics Implementation**
+```dart
+// lib/core/services/analytics_service.dart
+@riverpod
+class AnalyticsService extends _$AnalyticsService {
+  late FirebaseAnalytics _analytics;
+  
+  @override
+  Future<void> build() async {
+    _analytics = FirebaseAnalytics.instance;
+  }
+  
+  Future<void> logUserAction(String action, Map<String, dynamic> parameters) async {
+    await _analytics.logEvent(
+      name: action,
+      parameters: parameters,
+    );
+  }
+  
+  Future<void> setUserProperties(String userId, Map<String, String> properties) async {
+    await _analytics.setUserId(id: userId);
+    
+    for (final entry in properties.entries) {
+      await _analytics.setUserProperty(
+        name: entry.key,
+        value: entry.value,
+      );
+    }
+  }
+}
+```
+
+### **Performance Monitoring**
+```dart
+// lib/core/services/performance_service.dart
+class PerformanceService {
+  static Future<void> trackScreenLoad(String screenName) async {
+    final trace = FirebasePerformance.instance.newTrace('screen_load_$screenName');
+    await trace.start();
+    
+    // Simulate screen load time tracking
+    await Future.delayed(Duration(milliseconds: 100));
+    
+    await trace.stop();
+  }
+  
+  static Future<T> trackNetworkRequest<T>(
+    String requestName,
+    Future<T> Function() request,
+  ) async {
+    final trace = FirebasePerformance.instance.newTrace('network_$requestName');
+    await trace.start();
+    
+    try {
+      final result = await request();
+      trace.putAttribute('success', 'true');
+      return result;
+    } catch (e) {
+      trace.putAttribute('success', 'false');
+      trace.putAttribute('error', e.toString());
+      rethrow;
+    } finally {
+      await trace.stop();
+    }
+  }
+}
+```
+
 #### **2.1 Microservices Setup**
 ```dockerfile
 # User Service
