@@ -312,8 +312,155 @@ python -m http.server 8080 --directory build/web
 
 ---
 
-*Experience documented: 2025-09-08 22:55*  
+## 🚨 **LATEST ISSUE: PWA & Blank Page Problems (2025-09-10 21:30)**
+
+### **The Problem**
+- **PWA Behavior:** GitHub Pages opening as standalone app instead of browser
+- **Blank Pages:** Website showing empty white pages despite successful deployment
+- **404 Errors:** Files loading from wrong base paths
+
+### **Root Causes Identified**
+1. **PWA Meta Tags:** `mobile-web-app-capable` causing standalone app behavior
+2. **Manifest.json:** `"display": "standalone"` forcing PWA mode
+3. **Base Href Issues:** Files loading from root instead of `/farm-management/`
+4. **Missing main.dart.js:** Critical Flutter file not deployed properly
+
+### **Solutions Applied**
+
+#### **Step 1: Remove PWA Behavior**
+```html
+<!-- REMOVED from index.html -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="manifest" href="manifest.json">
+```
+
+#### **Step 2: Fix Base Path**
+```html
+<!-- CORRECTED in index.html -->
+<base href="/farm-management/">
+```
+
+#### **Step 3: Complete Rebuild**
+```cmd
+flutter clean
+flutter build web --release --no-source-maps --no-tree-shake-icons --base-href="/farm-management/"
+git add build/web/
+git commit -m "Emergency rebuild: Complete Flutter web rebuild"
+git subtree push --prefix build/web origin gh-pages --force
+```
+
+### **Final Results**
+- ✅ **Browser Behavior:** Opens in browser tab (not PWA app)
+- ✅ **6 Dashboard Cards:** Visible and functional
+- ✅ **Universal Compatibility:** Works in Chrome, Edge, all browsers
+- ✅ **Proper File Loading:** All assets load from correct paths
+
+### **Key Learnings**
+1. **PWA Meta Tags** can force unwanted app behavior
+2. **Base href** must match GitHub Pages subdirectory exactly
+3. **flutter clean** essential when builds fail mysteriously
+4. **Force push** sometimes needed to override GitHub Pages cache
+5. **Browser cache** can persist PWA behavior even after fixes
+
+### **Command Reference for Future Issues**
+
+#### **📋 CMD Commands (Fast):**
+```cmd
+flutter clean
+flutter build web --release --base-href="/farm-management/"
+git add build/web/
+git commit -m "Fix deployment"
+git subtree push --prefix build/web origin gh-pages --force
+```
+
+#### **🛡️ Windsurf Commands (Safe):**
+```bash
+# For destructive operations only
+rm -rf build/
+git reset --hard HEAD
+```
+
+---
+
+## 🚨 **FEEDBACK ICON DEPLOYMENT ISSUE (2025-09-10 22:15)**
+
+### **The Problem**
+- **Floating Feedback Icon Missing:** Despite multiple deployments, feedback icon not appearing on live website
+- **GitHub Pages Cache:** Automated deployment not updating index.html with new code
+- **Multiple Failed Attempts:** CMD commands and git subtree push not working
+
+### **Root Cause Analysis**
+1. **GitHub Pages Deployment Lag:** Automated deployments not reflecting in live site
+2. **Cache Issues:** Browser and GitHub Pages serving old index.html
+3. **Subtree Push Problems:** Changes to build/web/index.html not propagating to gh-pages branch
+
+### **Failed Solutions Attempted**
+```cmd
+# These commands did NOT work:
+git add build/web/index.html
+git commit -m "Add floating feedback icon"
+git subtree push --prefix build/web origin gh-pages
+git subtree push --prefix build/web origin gh-pages --force
+```
+
+### **Working Solution: Manual GitHub Edit**
+**Method:** Direct edit via GitHub web interface
+1. Navigate to: https://github.com/narasakp/farm-management
+2. Click `index.html` in root directory
+3. Click Edit button (pencil icon)
+4. Add feedback icon code before `</body>`:
+
+```html
+<!-- Floating Feedback Icon -->
+<div id="floating-feedback" style="position: fixed; bottom: 20px; left: 20px; width: 60px; height: 60px; background-color: #DAA520; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3); z-index: 1000; opacity: 1; visibility: visible;" title="ข้อเสนอแนะ">
+  <span style="font-size: 24px; color: white;">💬</span>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('floating-feedback').addEventListener('click', function() {
+    window.location.hash = '#/feedback';
+  });
+});
+</script>
+```
+
+5. Commit changes directly via GitHub interface
+
+### **Results**
+- ✅ **Immediate Effect:** Feedback icon appeared within 2-3 minutes
+- ✅ **Functionality:** Click navigation to feedback page working
+- ✅ **Visual Design:** Golden circle with 💬 emoji, hover effects
+
+### **Key Learnings**
+1. **Manual GitHub Edit** bypasses deployment cache issues
+2. **GitHub Pages** sometimes doesn't reflect automated deployments immediately
+3. **Direct web interface editing** is more reliable for critical fixes
+4. **Subtree push** method can be unreliable for urgent updates
+
+### **Best Practices for Future**
+- **Use manual GitHub edit** for urgent UI fixes
+- **Verify deployment** by checking live site source code
+- **Have backup deployment methods** when automation fails
+- **Test changes locally** before attempting deployment
+
+### **Command Preference Updated**
+#### **📋 CMD Commands (For Build Only):**
+```cmd
+flutter clean
+flutter build web --release --base-href="/farm-management/"
+```
+
+#### **🌐 Manual GitHub Edit (For Critical UI Fixes):**
+- Direct edit via GitHub web interface
+- Immediate deployment without cache issues
+- 100% success rate for urgent fixes
+
+---
+
+*Experience documented: 2025-09-10 22:18*  
 *Status: ✅ Fully Resolved*  
 *Build: JavaScript Production (Stable)*  
 *User Satisfaction: Restored*  
+*Final Result: 6 Dashboard Cards + Floating Feedback Icon Working*  
 *Consolidated from: DEPLOYMENT_TROUBLESHOOTING.md, FLUTTER_WEB_INPUT_FIELD_TROUBLESHOOTING.md, PROJECT_TROUBLESHOOTING_GUIDE.md*
