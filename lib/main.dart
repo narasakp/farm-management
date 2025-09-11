@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'core/firebase_service.dart';
+import 'core/hive_service.dart';
 import 'providers/auth_provider.dart';
 import 'providers/farm_provider.dart';
 import 'providers/financial_provider.dart';
@@ -38,8 +41,14 @@ import 'models/survey_form.dart';
 import 'utils/app_theme.dart';
 import 'utils/font_override.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize core services
+  await FirebaseService.initialize();
+  await HiveService.initialize();
+  
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
