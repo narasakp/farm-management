@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/breeding_provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../models/breeding_management.dart';
-import 'package:intl/intl.dart';
+import '../../providers/breeding_provider.dart';
+import '../../utils/app_theme.dart';
+import '../../widgets/app_bars/standard_app_bar.dart';
+import '../../utils/tab_navigation_mixin.dart';
 
 class BreedingManagementScreen extends StatefulWidget {
   const BreedingManagementScreen({super.key});
@@ -12,7 +15,7 @@ class BreedingManagementScreen extends StatefulWidget {
 }
 
 class _BreedingManagementScreenState extends State<BreedingManagementScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, TabNavigationMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -21,10 +24,12 @@ class _BreedingManagementScreenState extends State<BreedingManagementScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    initTabNavigation(_tabController, initialTab: 0, fallbackRoute: '/dashboard');
   }
 
   @override
   void dispose() {
+    disposeTabNavigation();
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -33,10 +38,11 @@ class _BreedingManagementScreenState extends State<BreedingManagementScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('จัดการการผสมพันธุ์'),
-        backgroundColor: const Color(0xFF8B4513),
-        foregroundColor: Colors.white,
+      appBar: StandardAppBar(
+        type: AppBarType.main,  // ชั้นที่ 1
+        title: 'จัดการการผสมพันธุ์',
+        onBackPressed: handleSmartBackPress,
+        showSearch: false,  // ไม่มี search icon
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,

@@ -1,12 +1,21 @@
 import 'package:flutter/foundation.dart';
 import '../models/survey_form.dart';
 import '../models/livestock.dart';
+import '../services/farm_survey_service.dart';
 
 class SurveyProvider with ChangeNotifier {
   bool _isLoading = false;
   List<FarmSurvey> _allSurveys = [];
   List<FarmSurvey> _filteredSurveys = [];
   String? _error;
+  final _surveyService = FarmSurveyService();
+
+  // Statistics from database
+  Map<String, dynamic> _statistics = {
+    'totalLivestock': 0,
+    'totalFarms': 0,
+    'livestockByType': <String, int>{}
+  };
 
   // Filter state
   String _searchQuery = '';
@@ -16,6 +25,7 @@ class SurveyProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   List<FarmSurvey> get surveys => _filteredSurveys;
   String? get error => _error;
+  Map<String, dynamic> get statistics => _statistics;
 
   // Submit new survey
   Future<bool> submitSurvey(FarmSurvey survey) async {
@@ -24,18 +34,50 @@ class SurveyProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      // บันทึกลง database จริง
+      final success = await _surveyService.submitSurvey(survey);
       
-      // Add to local list (in real app, this would be saved to backend)
-      _allSurveys.add(survey);
-      _applyFilters(); // Re-apply filters to include the new survey
+      if (success) {
+        // เพิ่มลง local list ด้วย
+        _allSurveys.add(survey);
+        _applyFilters();
+      }
       
       _isLoading = false;
       notifyListeners();
-      return true;
+      return success;
     } catch (e) {
       _error = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // Update existing survey
+  Future<bool> updateSurvey(FarmSurvey survey) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // อัปเดตใน database
+      final success = await _surveyService.updateSurvey(survey);
+      
+      if (success) {
+        // อัปเดต local list
+        final index = _allSurveys.indexWhere((s) => s.id == survey.id);
+        if (index != -1) {
+          _allSurveys[index] = survey;
+          _applyFilters();
+        }
+      }
+      
+      _isLoading = false;
+      notifyListeners();
+      return success;
+    } catch (e) {
+      _error = 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล: $e';
       _isLoading = false;
       notifyListeners();
       return false;
@@ -49,12 +91,12 @@ class SurveyProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 1));
-      
-      // Load sample data
-      _allSurveys = _generateSampleSurveys();
+      // ดึงข้อมูลจาก database จริง (ตาราง farm_surveys)
+      _allSurveys = await _surveyService.getSurveys(limit: 100);
       _filteredSurveys = List.from(_allSurveys);
+      
+      // ดึงสถิติจาก API (จากตาราง survey_livestock)
+      _statistics = await _surveyService.getLivestockStatistics();
       
       _isLoading = false;
       notifyListeners();
@@ -115,39 +157,13 @@ class SurveyProvider with ChangeNotifier {
 
   // Generate summary statistics
   Map<String, dynamic> getSurveyStatistics() {
-    if (_allSurveys.isEmpty) {
-      return {
-        'totalSurveys': 0,
-        'totalFarmers': 0,
-        'totalAnimals': 0,
-        'livestockByType': <String, int>{},
-        'surveysByArea': <String, int>{},
-      };
-    }
-
-    final livestockByType = <String, int>{};
-    final surveysByArea = <String, int>{};
-    int totalAnimals = 0;
-
-    for (final survey in _allSurveys) {
-      // Count animals by type
-      for (final livestock in survey.livestockData) {
-        final typeName = livestock.type.displayName;
-        livestockByType[typeName] = (livestockByType[typeName] ?? 0) + livestock.count;
-        totalAnimals += livestock.count;
-      }
-
-      // Count surveys by area
-      final area = '${survey.farmerInfo.address.tambon}, ${survey.farmerInfo.address.amphoe}';
-      surveysByArea[area] = (surveysByArea[area] ?? 0) + 1;
-    }
-
+    // ใช้ข้อมูลสถิติจาก API (ดึงจาก survey_livestock โดยตรง)
     return {
-      'totalSurveys': _allSurveys.length,
-      'totalFarmers': _allSurveys.length, // Assuming one farmer per survey
-      'totalAnimals': totalAnimals,
-      'livestockByType': livestockByType,
-      'surveysByArea': surveysByArea,
+      'totalSurveys': _statistics['totalFarms'] ?? 0,
+      'totalFarmers': _statistics['totalFarms'] ?? 0,
+      'totalAnimals': _statistics['totalLivestock'] ?? 0,
+      'livestockByType': _statistics['livestockByType'] ?? <String, int>{},
+      'surveysByArea': <String, int>{}, // TODO: สามารถเพิ่ม API สำหรับนับตามพื้นที่ได้
     };
   }
 
@@ -155,6 +171,64 @@ class SurveyProvider with ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  // Get all livestock from surveys (รวมข้อมูลจาก survey_livestock)
+  List<Map<String, dynamic>> getAllLivestockFromSurveys() {
+    final List<Map<String, dynamic>> allLivestock = [];
+    
+    for (var survey in _allSurveys) {
+      for (var livestock in survey.livestockData) {
+        allLivestock.add({
+          'surveyId': survey.id,
+          'farmerId': survey.farmerId,
+          'farmerName': survey.farmerInfo.fullName,
+          'farmerAddress': '${survey.farmerInfo.address.village} ม.${survey.farmerInfo.address.moo} ต.${survey.farmerInfo.address.tambon}',
+          'type': livestock.type,
+          'typeName': livestock.type.displayName,
+          'ageGroup': livestock.ageGroup,
+          'count': livestock.count,
+          'surveyDate': survey.surveyDate,
+          'notes': livestock.notes,
+        });
+      }
+    }
+    
+    return allLivestock;
+  }
+
+  // Get livestock grouped by survey + type (สำหรับแสดงแบบรวม)
+  List<Map<String, dynamic>> getGroupedLivestockFromSurveys() {
+    final Map<String, Map<String, dynamic>> grouped = {};
+    
+    for (var survey in _allSurveys) {
+      for (var livestock in survey.livestockData) {
+        final key = '${survey.id}_${livestock.type.name}';
+        
+        if (!grouped.containsKey(key)) {
+          grouped[key] = {
+            'surveyId': survey.id,
+            'farmerId': survey.farmerId,
+            'farmerName': survey.farmerInfo.fullName,
+            'farmerAddress': '${survey.farmerInfo.address.village} ม.${survey.farmerInfo.address.moo} ต.${survey.farmerInfo.address.tambon}',
+            'type': livestock.type,
+            'typeName': livestock.type.displayName,
+            'surveyDate': survey.surveyDate,
+            'totalCount': 0,
+            'details': <Map<String, dynamic>>[],
+          };
+        }
+        
+        grouped[key]!['totalCount'] = (grouped[key]!['totalCount'] as int) + livestock.count;
+        (grouped[key]!['details'] as List).add({
+          'ageGroup': livestock.ageGroup,
+          'count': livestock.count,
+          'notes': livestock.notes,
+        });
+      }
+    }
+    
+    return grouped.values.toList();
   }
 
   // Generate sample surveys for demonstration

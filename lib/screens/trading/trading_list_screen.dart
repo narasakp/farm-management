@@ -4,6 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/trading_provider.dart';
 import '../../models/trading_record.dart';
+import '../../models/livestock.dart';
+import '../../widgets/app_bars/standard_app_bar.dart';
+import '../../screens/social_commerce/share_dialog.dart';
 
 class TradingListScreen extends StatefulWidget {
   const TradingListScreen({super.key});
@@ -34,26 +37,18 @@ class _TradingListScreenState extends State<TradingListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('รายการซื้อขาย'),
-        backgroundColor: const Color(0xFF228B22),
-        foregroundColor: Colors.white,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
+      appBar: StandardAppBar(
+        type: AppBarType.main,
+        title: 'รายการซื้อขาย',
+        customActions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'รีเฟรชข้อมูล',
+            onPressed: () {
+              Provider.of<TradingProvider>(context, listen: false).loadTradingRecords();
+            },
           ),
-          child: IconButton(
-            icon: const Icon(Icons.home_rounded, size: 28),
-            color: Colors.white,
-            onPressed: () => context.go('/dashboard'),
-            tooltip: 'หน้าแรก',
-          ),
-        ),
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.transparent,
+        ],
       ),
       body: Consumer<TradingProvider>(
         builder: (context, provider, child) {
@@ -97,53 +92,108 @@ class _TradingListScreenState extends State<TradingListScreen> {
             onChanged: (value) => setState(() {}),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _selectedType,
-                  decoration: InputDecoration(
-                    labelText: 'ประเภท',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+              
+              if (isMobile) {
+                // 📱 Mobile: Column (1 แถว 1 input)
+                return Column(
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: _selectedType,
+                      decoration: InputDecoration(
+                        labelText: 'ประเภท',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                      items: ['ทั้งหมด', 'buy', 'sell']
+                          .map((type) => DropdownMenuItem(
+                                value: type,
+                                child: Text(type == 'ทั้งหมด' ? type : 
+                                  type == 'buy' ? 'ซื้อ' : 'ขาย'),
+                              ))
+                          .toList(),
+                      onChanged: (value) => setState(() => _selectedType = value!),
                     ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  items: ['ทั้งหมด', 'buy', 'sell']
-                      .map((type) => DropdownMenuItem(
-                            value: type,
-                            child: Text(type == 'ทั้งหมด' ? type : 
-                              type == 'buy' ? 'ซื้อ' : 'ขาย'),
-                          ))
-                      .toList(),
-                  onChanged: (value) => setState(() => _selectedType = value!),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _selectedStatus,
-                  decoration: InputDecoration(
-                    labelText: 'สถานะ',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: _selectedStatus,
+                      decoration: InputDecoration(
+                        labelText: 'สถานะ',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                      items: ['ทั้งหมด', 'completed', 'pending', 'cancelled']
+                          .map((status) => DropdownMenuItem(
+                                value: status,
+                                child: Text(status == 'ทั้งหมด' ? status : 
+                                  status == 'completed' ? 'สำเร็จ' :
+                                  status == 'pending' ? 'รอดำเนินการ' : 'ยกเลิก'),
+                              ))
+                          .toList(),
+                      onChanged: (value) => setState(() => _selectedStatus = value!),
                     ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  items: ['ทั้งหมด', 'completed', 'pending', 'cancelled']
-                      .map((status) => DropdownMenuItem(
-                            value: status,
-                            child: Text(status == 'ทั้งหมด' ? status : 
-                              status == 'completed' ? 'สำเร็จ' :
-                              status == 'pending' ? 'รอดำเนินการ' : 'ยกเลิก'),
-                          ))
-                      .toList(),
-                  onChanged: (value) => setState(() => _selectedStatus = value!),
-                ),
-              ),
-            ],
+                  ],
+                );
+              } else {
+                // 💻 Desktop: Row
+                return Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedType,
+                        decoration: InputDecoration(
+                          labelText: 'ประเภท',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        items: ['ทั้งหมด', 'buy', 'sell']
+                            .map((type) => DropdownMenuItem(
+                                  value: type,
+                                  child: Text(type == 'ทั้งหมด' ? type : 
+                                    type == 'buy' ? 'ซื้อ' : 'ขาย'),
+                                ))
+                            .toList(),
+                        onChanged: (value) => setState(() => _selectedType = value!),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedStatus,
+                        decoration: InputDecoration(
+                          labelText: 'สถานะ',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                        ),
+                        items: ['ทั้งหมด', 'completed', 'pending', 'cancelled']
+                            .map((status) => DropdownMenuItem(
+                                  value: status,
+                                  child: Text(status == 'ทั้งหมด' ? status : 
+                                    status == 'completed' ? 'สำเร็จ' :
+                                    status == 'pending' ? 'รอดำเนินการ' : 'ยกเลิก'),
+                                ))
+                            .toList(),
+                        onChanged: (value) => setState(() => _selectedStatus = value!),
+                      ),
+                    ),
+                  ],
+                );
+              }
+            },
           ),
         ],
       ),
@@ -318,6 +368,37 @@ class _TradingListScreenState extends State<TradingListScreen> {
                 ),
               ),
             ],
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Center(
+                          child: Text(
+                            'แชร์: รายการซื้อขาย ID: ${record.id}',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        duration: const Duration(seconds: 2),
+                        behavior: SnackBarBehavior.floating,
+                        margin: EdgeInsets.symmetric(horizontal: 16, vertical: MediaQuery.of(context).size.height * 0.35),
+                        backgroundColor: Colors.green[700],
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.share),
+                  label: const Text('แชร์'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

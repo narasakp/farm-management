@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Market Listings - Public Read, Auth Write
+    match /market_listings/{listingId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Social Shares - Public Read, Auth Write
+    match /social_shares/{shareId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Orders - Owner only
+    match /orders/{orderId} {
+      allow read: if request.auth != null && 
+                    (request.auth.uid == resource.data.userId || 
+                     request.auth.uid == resource.data.farmerId);
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && 
+                      request.auth.uid == resource.data.farmerId;
+    }
+    
+    // Farms - Auth users
+    match /farms/{farmId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Livestock - Auth users
+    match /livestock/{livestockId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Users - Owner only
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

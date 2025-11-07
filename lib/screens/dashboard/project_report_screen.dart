@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 import '../../utils/responsive_helper.dart';
+import '../../widgets/app_bars/standard_app_bar.dart';
 
 class ProjectReportScreen extends StatefulWidget {
   const ProjectReportScreen({super.key});
@@ -107,31 +108,10 @@ class _ProjectReportScreenState extends State<ProjectReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('รายงานโปรเจกต์'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.transparent,
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-        ),
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF228B22).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.home_rounded, size: 28),
-            color: const Color(0xFF228B22).withOpacity(0.8),
-            onPressed: () => context.go('/dashboard'),
-            tooltip: 'หน้าแรก',
-          ),
-        ),
-        actions: [
+      appBar: StandardAppBar(
+        type: AppBarType.main,
+        title: 'รายงานโปรเจกต์',
+        customActions: [
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: ElevatedButton.icon(

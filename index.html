@@ -14,112 +14,100 @@
     This is a placeholder for base href that will be replaced by the value of
     the `--base-href` argument provided to `flutter build`.
   -->
-  <base href="/farm-management/">
+  <base href="/">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #ffffff !important;
+      overflow-x: hidden;
+    }
+    
+    flt-glass-pane {
+      background-color: #ffffff !important;
+      pointer-events: none !important; /* ✅ Fix: ให้ pointer events ผ่านไปถึง elements */
+    }
+    
+    flutter-view {
+      background-color: #ffffff !important;
+    }
+    
+    flt-scene-host {
+      background-color: #ffffff !important;
+    }
+    
+    /* ✅ Fix: Flutter Web Canvas Layer Issues */
+    canvas {
+      z-index: 0 !important; /* ให้ canvas อยู่ชั้นล่าง */
+    }
+    
+    /* ✅ Fix: Text Rendering Layer */
+    flt-text-editing-host,
+    flt-text-editing-element {
+      z-index: 999 !important; /* ให้ text อยู่ชั้นบน */
+    }
+    
+    /* ✅ Fix: Prevent overlay on interactive elements */
+    button, a, input, select {
+      position: relative !important;
+      z-index: 100 !important;
+    }
+    
+    html, body {
+      height: 100vh;
+      width: 100vw;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      background-color: #ffffff !important;
+    }
+  </style>
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
 
   <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="livestock_farm_management">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>livestock_farm_management</title>
+  <title>farm</title>
+  <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <!-- Floating Feedback Icon -->
-  <div id="floating-feedback" style="
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    width: 60px;
-    height: 60px;
-    background-color: #DAA520;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
-    z-index: 1000;
-    transition: all 0.3s ease;
-    opacity: 1;
-    visibility: visible;
-  " title="ข้อเสนอแนะ">
-    <span style="font-size: 24px; color: white;">💬</span>
-  </div>
-
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <!-- Google OAuth Configuration (Knowledge Base Solution) -->
   <script>
-    function navigateToFeedback() {
-      window.location.hash = '#/feedback';
-    }
-    document.addEventListener('DOMContentLoaded', function() {
-      const feedbackIcon = document.getElementById('floating-feedback');
-      feedbackIcon.addEventListener('click', navigateToFeedback);
-      feedbackIcon.addEventListener('mouseenter', function() {
-        this.style.transform = 'scale(1.1)';
-        this.style.boxShadow = '0 6px 16px rgba(218, 165, 32, 0.4)';
-      });
-      feedbackIcon.addEventListener('mouseleave', function() {
-        this.style.transform = 'scale(1)';
-        this.style.boxShadow = '0 4px 12px rgba(218, 165, 32, 0.3)';
-      });
+    // TEMPORARY: Disable Google OAuth due to configuration issues
+    // User can still login with username/password
+    window.addEventListener('load', function() {
+      console.log('⚠️ Google OAuth temporarily disabled - use username/password login');
+      console.log('📝 To enable: Configure OAuth 2.0 in Google Cloud Console');
+      console.log('   1. Add http://localhost:8096 to Authorized JavaScript origins');
+      console.log('   2. Add http://localhost:8096 to Authorized redirect URIs');
+      console.log('   3. Wait 5-10 minutes for changes to propagate');
     });
   </script>
-
+  
+  <!-- Logout Function -->
+  <script>
+    function performLogout() {
+      console.log('🚪 Logout called');
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/login';
+    }
+  </script>
+  
+  <!-- Email Sender for OTP -->
+  <script src="email_sender.js"></script>
+  
   <script src="flutter_bootstrap.js" async></script>
-
-<!-- Floating Feedback Icon -->
-<div id="floating-feedback" style="position: fixed; bottom: 20px; left: 20px; width: 60px; height: 60px; background-color: #DAA520; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3); z-index: 1000; transition: all 0.3s ease; opacity: 0; visibility: hidden;" title="ข้อเสนอแนะ">
-  <span style="font-size: 24px; color: white;">💬</span>
-</div>
-
-<script>
-function updateFeedbackIconVisibility() {
-  const feedbackIcon = document.getElementById('floating-feedback');
-  const currentPath = window.location.hash || window.location.pathname;
-  
-  // ซ่อนเฉพาะ 3 หน้า: login, register, feedback
-  if (currentPath.includes('login') || currentPath.includes('register') || currentPath.includes('#/feedback')) {
-    feedbackIcon.style.opacity = '0';
-    feedbackIcon.style.visibility = 'hidden';
-  } 
-  // แสดงทุกหน้าอื่นๆ (รวม dashboard และ cards ทั้งหมด)
-  else {
-    feedbackIcon.style.opacity = '1';
-    feedbackIcon.style.visibility = 'visible';
-  }
-}
-
-function navigateToFeedback() {
-  window.location.hash = '#/feedback';
-}
-
-// เรียกใช้ทันทีก่อน DOM load เพื่อป้องกันการกระพริบ
-updateFeedbackIconVisibility();
-
-document.addEventListener('DOMContentLoaded', function() {
-  const feedbackIcon = document.getElementById('floating-feedback');
-  feedbackIcon.addEventListener('click', navigateToFeedback);
-  feedbackIcon.addEventListener('mouseenter', function() {
-    this.style.transform = 'scale(1.1)';
-    this.style.boxShadow = '0 6px 16px rgba(218, 165, 32, 0.4)';
-  });
-  feedbackIcon.addEventListener('mouseleave', function() {
-    this.style.transform = 'scale(1)';
-    this.style.boxShadow = '0 4px 12px rgba(218, 165, 32, 0.3)';
-  });
-  
-  // เรียกใช้อีกครั้งหลัง DOM load
-  updateFeedbackIconVisibility();
-  window.addEventListener('hashchange', updateFeedbackIconVisibility);
-  setTimeout(updateFeedbackIconVisibility, 100);
-  setInterval(updateFeedbackIconVisibility, 2000);
-});
-</script>
-
 </body>
 </html>

@@ -15,19 +15,24 @@ enum LivestockType {
   pigLocal('สุกรพื้นเมือง'),
   pigBreeder('สุกรพันธุ์'),
   pigFattening('สุกรขุน'),
+  pigBreederYoung('ลูกสุกรพันธุ์'),
   
   // ไก่
   chickenLocal('ไก่พื้นเมือง'),
   chickenCrossbred('ไก่ลูกผสม'),
-  chickenBroiler('ไก่เนื้อ'),
-  chickenLayer('ไก่ไข่'),
-  chickenBreederPS('ไก่พ่อแม่พันธุ์'),
-  chickenBreederGP('ไก่ปู่ย่าพันธุ์'),
+  chickenBroiler('ไก่เนื้อ (Boiler)'),
+  chickenLayer('ไก่ไข่ (Layer)'),
+  chickenBreederMeatPS('ไก่พ่อ-แม่พันธุ์ ผลิตลูกไก่เนื้อ (PS)'),
+  chickenBreederLayerPS('ไก่พ่อ-แม่พันธุ์ ผลิตลูกไก่ไข่ (PS)'),
+  chickenBreederMeatGP('ไก่ปู่-ย่าพันธุ์ ผลิตลูกไก่เนื้อ (GP)'),
+  chickenBreederLayerGP('ไก่ปู่-ย่าพันธุ์ ผลิตลูกไก่ไข่ (GP)'),
   
   // เป็ด
+  duckMuscovy('เป็ดเทศ'),
   duckMeat('เป็ดเนื้อ'),
   duckEgg('เป็ดไข่'),
-  duckField('เป็ดไล่ทุ่ง'),
+  duckMeatField('เป็ดเนื้อ ไล่ทุ่ง'),
+  duckEggField('เป็ดไข่ ไล่ทุ่ง'),
   
   // แพะ
   goatMeat('แพะเนื้อ'),
@@ -39,13 +44,10 @@ enum LivestockType {
   // นกกระทา
   quailMeat('นกกระทาเนื้อ'),
   quailEgg('นกกระทาไข่'),
-  quailBreeder('นกกระทาพ่อแม่พันธุ์'),
   
   // สัตว์เลี้ยง
   dog('สุนัข'),
   cat('แมว'),
-  rabbit('กระต่าย'),
-  hamster('หนูแฮมสเตอร์'),
   bird('นกสวยงาม'),
   fish('ปลาสวยงาม'),
   

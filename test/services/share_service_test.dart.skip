@@ -1,0 +1,236 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
+import 'package:mockito/annotations.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:livestock_farm_management/services/social_commerce/share_service.dart';
+import 'package:livestock_farm_management/models/trading.dart';
+import 'package:livestock_farm_management/models/livestock.dart';
+
+// Generate mocks
+@GenerateMocks([FirebaseFirestore, FirebaseAnalytics, CollectionReference, DocumentReference])
+void main() {
+  late ShareService shareService;
+  late MockFirebaseFirestore mockFirestore;
+  late MockFirebaseAnalytics mockAnalytics;
+
+  setUp(() {
+    mockFirestore = MockFirebaseFirestore();
+    mockAnalytics = MockFirebaseAnalytics();
+    // Note: You'll need to modify ShareService to accept these in constructor
+    // For now, this is a template
+  });
+
+  group('ShareService - Share to Social Media', () {
+    test('should share to Facebook successfully', () async {
+      // Arrange
+      final listing = MarketListing(
+        id: 'listing123',
+        farmId: 'farm123',
+        livestockId: 'livestock123',
+        askingPrice: 45000,
+        isNegotiable: true,
+        listedDate: DateTime.now(),
+        status: 'active',
+        viewCount: 0,
+        createdAt: DateTime.now(),
+        shareTitle: 'ขายโคบราห์มัน',
+        shareDescription: 'โคเนื้อคุณภาพดี น้ำหนัก 350 กก.',
+        shareTags: ['#วัว', '#โคเนื้อ', '#ปศุสัตว์'],
+      );
+
+      final livestock = Livestock(
+        id: 'livestock123',
+        name: 'โคบราห์มัน #001',
+        type: LivestockType.cattle,
+        breed: 'บราห์มัน',
+        birthDate: DateTime(2021, 1, 1),
+        gender: 'male',
+        farmId: 'farm123',
+        status: 'active',
+      );
+
+      // Mock Firestore collection
+      final mockCollection = MockCollectionReference();
+      when(mockFirestore.collection('social_shares')).thenReturn(mockCollection);
+      when(mockCollection.add(any)).thenAnswer((_) async => MockDocumentReference());
+
+      // Mock Analytics
+      when(mockAnalytics.logEvent(
+        name: anyNamed('name'),
+        parameters: anyNamed('parameters'),
+      )).thenAnswer((_) async => {});
+
+      // Act
+      final result = await shareService.shareToSocial(
+        listing: listing,
+        livestock: livestock,
+        platform: 'facebook',
+        template: 'card',
+        userId: 'user123',
+      );
+
+      // Assert
+      expect(result, true);
+      verify(mockFirestore.collection('social_shares').add(any)).called(1);
+      verify(mockAnalytics.logEvent(
+        name: 'social_share',
+        parameters: anyNamed('parameters'),
+      )).called(1);
+    });
+
+    test('should handle network errors gracefully', () async {
+      // Arrange
+      final listing = _createMockListing();
+      final livestock = _createMockLivestock();
+
+      final mockCollection = MockCollectionReference();
+      when(mockFirestore.collection('social_shares')).thenReturn(mockCollection);
+      when(mockCollection.add(any)).thenThrow(Exception('Network error'));
+
+      // Act
+      final result = await shareService.shareToSocial(
+        listing: listing,
+        livestock: livestock,
+        platform: 'facebook',
+        userId: 'user123',
+      );
+
+      // Assert
+      expect(result, false);
+    });
+
+    test('should generate correct deep link URL', () {
+      // Arrange
+      final listingId = 'listing123';
+      final platform = 'facebook';
+
+      // Act
+      final url = shareService.generateDeepLink(listingId, platform);
+
+      // Assert
+      expect(url, contains('listing123'));
+      expect(url, contains('source=facebook'));
+      expect(url, startsWith('https://'));
+    });
+
+    test('should format content correctly for each platform', () {
+      // Arrange
+      final listing = _createMockListing();
+      final livestock = _createMockLivestock();
+
+      // Act
+      final facebookContent = shareService.generateShareContent(
+        listing: listing,
+        livestock: livestock,
+        platform: 'facebook',
+      );
+
+      final tiktokContent = shareService.generateShareContent(
+        listing: listing,
+        livestock: livestock,
+        platform: 'tiktok',
+      );
+
+      // Assert
+      expect(facebookContent, isNotEmpty);
+      expect(tiktokContent, isNotEmpty);
+      expect(tiktokContent.length, lessThan(151)); // TikTok caption limit
+    });
+  });
+
+  group('ShareService - Statistics', () {
+    test('should get share statistics correctly', () async {
+      // Arrange
+      final listingId = 'listing123';
+
+      // Mock query
+      final mockCollection = MockCollectionReference();
+      when(mockFirestore.collection('social_shares')).thenReturn(mockCollection);
+      
+      // Act
+      final stats = await shareService.getShareStats(listingId);
+
+      // Assert
+      expect(stats, isA<Map<String, dynamic>>());
+      expect(stats, containsKey('totalShares'));
+      expect(stats, containsKey('platformBreakdown'));
+    });
+
+    test('should calculate conversion rate correctly', () async {
+      // Arrange
+      final listingId = 'listing123';
+      // Mock data with 100 clicks and 15 conversions
+
+      // Act
+      final stats = await shareService.getShareStats(listingId);
+      final conversionRate = stats['conversionRate'];
+
+      // Assert
+      expect(conversionRate, isA<double>());
+      expect(conversionRate, greaterThanOrEqualTo(0));
+      expect(conversionRate, lessThanOrEqualTo(100));
+    });
+  });
+
+  group('ShareService - Platform-Specific', () {
+    test('should share to all platforms successfully', () async {
+      final platforms = ['facebook', 'tiktok', 'x', 'line'];
+      
+      for (final platform in platforms) {
+        final result = await shareService.shareToSocial(
+          listing: _createMockListing(),
+          livestock: _createMockLivestock(),
+          platform: platform,
+          userId: 'user123',
+        );
+        
+        expect(result, true, reason: '$platform should succeed');
+      }
+    });
+
+    test('should handle invalid platform gracefully', () async {
+      // Act
+      final result = await shareService.shareToSocial(
+        listing: _createMockListing(),
+        livestock: _createMockLivestock(),
+        platform: 'invalid_platform',
+        userId: 'user123',
+      );
+
+      // Assert
+      expect(result, false);
+    });
+  });
+}
+
+// Helper functions
+MarketListing _createMockListing() {
+  return MarketListing(
+    id: 'listing123',
+    farmId: 'farm123',
+    livestockId: 'livestock123',
+    askingPrice: 45000,
+    isNegotiable: true,
+    listedDate: DateTime.now(),
+    status: 'active',
+    viewCount: 0,
+    createdAt: DateTime.now(),
+    shareTitle: 'ขายโคบราห์มัน',
+    shareDescription: 'โคเนื้อคุณภาพดี',
+    shareTags: ['#วัว', '#โคเนื้อ'],
+  );
+}
+
+Livestock _createMockLivestock() {
+  return Livestock(
+    id: 'livestock123',
+    name: 'โคบราห์มัน #001',
+    type: LivestockType.cattle,
+    breed: 'บราห์มัน',
+    birthDate: DateTime(2021, 1, 1),
+    gender: 'male',
+    farmId: 'farm123',
+    status: 'active',
+  );
+}

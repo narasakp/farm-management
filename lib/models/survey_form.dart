@@ -5,10 +5,13 @@ class FarmSurvey {
   final String id;
   final String farmerId;
   final String surveyorId;
+  final String? surveyorName; // ชื่อผู้สำรวจ (display_name หรือ username)
+  final String? surveyorRole; // role ของผู้สำรวจ
   final DateTime surveyDate;
   final FarmerInfo farmerInfo;
   final List<LivestockSurveyData> livestockData;
-  final double? cropArea; // พื้นที่พืชอาหารสัตว์ (ไร่)
+  final double? farmArea; // ขนาดพื้นที่ฟาร์ม (ไร่)
+  final double? cropArea; // พื้นที่ปลูกพืชอาหารสัตว์ (ไร่)
   final String? notes;
   final String? gpsLocation;
   final DateTime createdAt;
@@ -17,9 +20,12 @@ class FarmSurvey {
     required this.id,
     required this.farmerId,
     required this.surveyorId,
+    this.surveyorName,
+    this.surveyorRole,
     required this.surveyDate,
     required this.farmerInfo,
     required this.livestockData,
+    this.farmArea,
     this.cropArea,
     this.notes,
     this.gpsLocation,
@@ -31,11 +37,14 @@ class FarmSurvey {
       id: json['id'],
       farmerId: json['farmerId'],
       surveyorId: json['surveyorId'],
+      surveyorName: json['surveyorName'],
+      surveyorRole: json['surveyorRole'],
       surveyDate: DateTime.parse(json['surveyDate']),
       farmerInfo: FarmerInfo.fromJson(json['farmerInfo']),
       livestockData: (json['livestockData'] as List)
           .map((e) => LivestockSurveyData.fromJson(e))
           .toList(),
+      farmArea: json['farmArea']?.toDouble(),
       cropArea: json['cropArea']?.toDouble(),
       notes: json['notes'],
       gpsLocation: json['gpsLocation'],
@@ -48,9 +57,12 @@ class FarmSurvey {
       'id': id,
       'farmerId': farmerId,
       'surveyorId': surveyorId,
+      'surveyorName': surveyorName,
+      'surveyorRole': surveyorRole,
       'surveyDate': surveyDate.toIso8601String(),
       'farmerInfo': farmerInfo.toJson(),
       'livestockData': livestockData.map((e) => e.toJson()).toList(),
+      'farmArea': farmArea,
       'cropArea': cropArea,
       'notes': notes,
       'gpsLocation': gpsLocation,
@@ -66,6 +78,7 @@ class FarmerInfo {
   final String idCard; // เลขบัตรประจำตัว
   final String phoneNumber;
   final FarmerAddress address;
+  final String? photoBase64; // รูปภาพเกษตรกร (Base64)
 
   FarmerInfo({
     required this.title,
@@ -74,6 +87,7 @@ class FarmerInfo {
     required this.idCard,
     required this.phoneNumber,
     required this.address,
+    this.photoBase64,
   });
 
   String get fullName => '$title$firstName $lastName';
@@ -86,6 +100,7 @@ class FarmerInfo {
       idCard: json['idCard'],
       phoneNumber: json['phoneNumber'],
       address: FarmerAddress.fromJson(json['address']),
+      photoBase64: json['photoBase64'],
     );
   }
 
@@ -97,6 +112,7 @@ class FarmerInfo {
       'idCard': idCard,
       'phoneNumber': phoneNumber,
       'address': address.toJson(),
+      'photoBase64': photoBase64,
     };
   }
 }
@@ -152,7 +168,22 @@ class FarmerAddress {
     parts.add('ตำบล$tambon');
     parts.add('อำเภอ$amphoe');
     parts.add('จังหวัด$province');
-    if (postalCode != null) parts.add(postalCode!);
+    if (postalCode != null && postalCode!.isNotEmpty) {
+      parts.add(postalCode!); // รหัสไปรษณีย์ต่อท้ายจังหวัด
+    }
+    return parts.join(' ');
+  }
+  
+  /// ที่อยู่ที่ mask ตาม role (ซ่อน บ้านเลขที่, บ้าน, หมู่ที่)
+  /// ใช้สำหรับ OFFICER และ RESEARCHER
+  String get maskedAddress {
+    final parts = <String>[];
+    parts.add('ตำบล$tambon');
+    parts.add('อำเภอ$amphoe');
+    parts.add('จังหวัด$province');
+    if (postalCode != null && postalCode!.isNotEmpty) {
+      parts.add(postalCode!);
+    }
     return parts.join(' ');
   }
 }
@@ -207,11 +238,11 @@ class SurveyTemplate {
     switch (type) {
       case LivestockType.dairyCow:
         return [
-          'แรกเกิด-1ปี',
-          '1ปี-ตั้งท้องแรก',
-          'กำลังรีดนม',
-          'แห้งนม',
-          'พ่อพันธุ์'
+          'เพศเมีย แรกเกิด-1ปี',
+          'เพศเมีย 1ปี-ตั้งท้องแรก',
+          'เพศเมีย โคกำลังรีดนม',
+          'เพศเมีย โคแห้งนม',
+          'เพศผู้'
         ];
       case LivestockType.beefCattleLocal:
       case LivestockType.beefCattlePurebred:
@@ -242,16 +273,40 @@ class SurveyTemplate {
           'เพศเมีย (ตั้งท้องแรกขึ้นไป)'
         ];
       case LivestockType.pigLocal:
+        return []; // ไม่ต้องมีกลุ่มอายุ/เพศ
       case LivestockType.pigBreeder:
-      case LivestockType.pigFattening:
         return [
           'พ่อพันธุ์',
           'แม่พันธุ์',
+        ];
+      case LivestockType.pigFattening:
+        return [
           'ลูกสุกรขุน',
           'สุกรขุน',
-          'ลูกสุกรพันธุ์ เพศเมีย',
-          'ลูกสุกรพันธุ์ เพศผู้'
         ];
+      case LivestockType.pigBreederYoung:
+        return [
+          'เพศเมีย',
+          'เพศผู้',
+        ];
+      case LivestockType.quailMeat:
+      case LivestockType.quailEgg:
+        return []; // ไม่ต้องมีกลุ่มอายุ/เพศ
+      case LivestockType.duckMuscovy:
+      case LivestockType.duckMeat:
+      case LivestockType.duckEgg:
+      case LivestockType.duckMeatField:
+      case LivestockType.duckEggField:
+        return []; // เป็ดทั้ง 5 ประเภทไม่ต้องมีกลุ่มอายุ/เพศ
+      case LivestockType.chickenLocal:
+      case LivestockType.chickenCrossbred:
+      case LivestockType.chickenBroiler:
+      case LivestockType.chickenLayer:
+      case LivestockType.chickenBreederMeatPS:
+      case LivestockType.chickenBreederLayerPS:
+      case LivestockType.chickenBreederMeatGP:
+      case LivestockType.chickenBreederLayerGP:
+        return []; // ไก่ทั้ง 8 ประเภทไม่ต้องมีกลุ่มอายุ/เพศ
       default:
         return ['เพศผู้', 'เพศเมีย'];
     }

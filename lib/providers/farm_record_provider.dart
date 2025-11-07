@@ -225,7 +225,7 @@ class FarmRecordProvider with ChangeNotifier {
       await Future.delayed(const Duration(seconds: 1));
       _farmRecords.add(record);
     } catch (e) {
-      throw Exception('เพิ่มรายการฟาร์มไม่สำเร็จ: ${e.toString()}');
+      throw Exception('เพิ่มทะเบียนฟาร์มไม่สำเร็จ: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -243,7 +243,7 @@ class FarmRecordProvider with ChangeNotifier {
         _farmRecords[index] = record;
       }
     } catch (e) {
-      throw Exception('อัปเดตรายการฟาร์มไม่สำเร็จ: ${e.toString()}');
+      throw Exception('อัปเดตทะเบียนฟาร์มไม่สำเร็จ: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -258,7 +258,7 @@ class FarmRecordProvider with ChangeNotifier {
       await Future.delayed(const Duration(seconds: 1));
       _farmRecords.removeWhere((record) => record.id == recordId);
     } catch (e) {
-      throw Exception('ลบรายการฟาร์มไม่สำเร็จ: ${e.toString()}');
+      throw Exception('ลบทะเบียนฟาร์มไม่สำเร็จ: ${e.toString()}');
     } finally {
       _isLoading = false;
       notifyListeners();

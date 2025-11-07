@@ -1,0 +1,348 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
+import 'package:provider/provider.dart';
+import 'package:livestock_farm_management/screens/social_commerce/share_dialog.dart';
+import 'package:livestock_farm_management/models/trading.dart';
+import 'package:livestock_farm_management/models/livestock.dart';
+
+void main() {
+  group('ShareDialog Widget Tests', () {
+    late MarketListing mockListing;
+    late Livestock mockLivestock;
+
+    setUp(() {
+      mockListing = MarketListing(
+        id: 'listing123',
+        farmId: 'farm123',
+        livestockId: 'livestock123',
+        askingPrice: 45000,
+        isNegotiable: true,
+        listedDate: DateTime.now(),
+        status: 'active',
+        viewCount: 0,
+        createdAt: DateTime.now(),
+        shareTitle: 'ขายโคบราห์มัน',
+        shareDescription: 'โคเนื้อคุณภาพดี น้ำหนัก 350 กก.',
+        shareTags: ['#วัว', '#โคเนื้อ', '#ปศุสัตว์'],
+      );
+
+      mockLivestock = Livestock(
+        id: 'livestock123',
+        name: 'โคบราห์มัน #001',
+        type: LivestockType.cattle,
+        breed: 'บราห์มัน',
+        birthDate: DateTime(2021, 1, 1),
+        gender: 'male',
+        farmId: 'farm123',
+        status: 'active',
+      );
+    });
+
+    Widget createTestWidget() {
+      return MaterialApp(
+        home: Scaffold(
+          body: ShareDialog(
+            listing: mockListing,
+            livestock: mockLivestock,
+            userId: 'user123',
+          ),
+        ),
+      );
+    }
+
+    testWidgets('should display all template options', (WidgetTester tester) async {
+      // Arrange & Act
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.text('Card'), findsOneWidget);
+      expect(find.text('Price Highlight'), findsOneWidget);
+      expect(find.text('Gallery'), findsOneWidget);
+      expect(find.text('Video'), findsOneWidget);
+    });
+
+    testWidgets('should display all platform options', (WidgetTester tester) async {
+      // Arrange & Act
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.text('Facebook'), findsOneWidget);
+      expect(find.text('TikTok'), findsOneWidget);
+      expect(find.text('X (Twitter)'), findsOneWidget);
+      expect(find.text('LINE'), findsOneWidget);
+    });
+
+    testWidgets('should select template when tapped', (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Act
+      await tester.tap(find.text('Price Highlight'));
+      await tester.pumpAndSettle();
+
+      // Assert - Check if template is selected (visual indicator)
+      expect(find.byType(Icon), findsWidgets);
+    });
+
+    testWidgets('should allow multiple platform selection', (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Act - Tap Facebook
+      await tester.tap(find.text('Facebook'));
+      await tester.pumpAndSettle();
+
+      // Act - Tap TikTok
+      await tester.tap(find.text('TikTok'));
+      await tester.pumpAndSettle();
+
+      // Assert - Both should be selected
+      final checkIcons = find.byIcon(Icons.check_circle);
+      expect(checkIcons, findsWidgets);
+    });
+
+    testWidgets('should display caption editor', (WidgetTester tester) async {
+      // Arrange & Act
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text('แก้ไข Caption'), findsOneWidget);
+    });
+
+    testWidgets('should allow editing caption', (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Act
+      await tester.enterText(
+        find.byType(TextField),
+        'ขายโคเนื้อคุณภาพดี ราคาพิเศษ!',
+      );
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.text('ขายโคเนื้อคุณภาพดี ราคาพิเศษ!'), findsOneWidget);
+    });
+
+    testWidgets('should display preview card', (WidgetTester tester) async {
+      // Arrange & Act
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.text('Preview'), findsOneWidget);
+      expect(find.byType(Card), findsWidgets);
+    });
+
+    testWidgets('should update preview when template changes', (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Act - Change template
+      await tester.tap(find.text('Gallery'));
+      await tester.pumpAndSettle();
+
+      // Assert - Preview should update (check for widget rebuild)
+      expect(find.byType(Card), findsWidgets);
+    });
+
+    testWidgets('should show share button', (WidgetTester tester) async {
+      // Arrange & Act
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.text('แชร์เลย'), findsOneWidget);
+      expect(find.byType(ElevatedButton), findsWidgets);
+    });
+
+    testWidgets('share button should be disabled when no platform selected', 
+        (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Assert - Find the share button
+      final shareButton = find.widgetWithText(ElevatedButton, 'แชร์เลย');
+      expect(shareButton, findsOneWidget);
+
+      // Get button widget and check if enabled
+      final button = tester.widget<ElevatedButton>(shareButton);
+      expect(button.onPressed, isNull); // Disabled button has null onPressed
+    });
+
+    testWidgets('share button should be enabled when platform selected', 
+        (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Act - Select a platform
+      await tester.tap(find.text('Facebook'));
+      await tester.pumpAndSettle();
+
+      // Assert
+      final shareButton = find.widgetWithText(ElevatedButton, 'แชร์เลย');
+      final button = tester.widget<ElevatedButton>(shareButton);
+      expect(button.onPressed, isNotNull); // Enabled button
+    });
+
+    testWidgets('should show loading indicator when sharing', 
+        (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Act - Select platform and share
+      await tester.tap(find.text('Facebook'));
+      await tester.pumpAndSettle();
+      
+      await tester.tap(find.text('แชร์เลย'));
+      await tester.pump(); // Don't settle yet to catch loading state
+
+      // Assert - Should show loading indicator
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('should show success message after sharing', 
+        (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Act
+      await tester.tap(find.text('Facebook'));
+      await tester.pumpAndSettle();
+      
+      await tester.tap(find.text('แชร์เลย'));
+      await tester.pumpAndSettle(Duration(seconds: 3));
+
+      // Assert - Should show success message
+      expect(find.text('แชร์สำเร็จ!'), findsOneWidget);
+    });
+
+    testWidgets('should close dialog after successful share', 
+        (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Act
+      await tester.tap(find.text('Facebook'));
+      await tester.pumpAndSettle();
+      
+      await tester.tap(find.text('แชร์เลย'));
+      await tester.pumpAndSettle(Duration(seconds: 5));
+
+      // Assert - Dialog should be closed (pop from navigator)
+      expect(find.byType(ShareDialog), findsNothing);
+    });
+
+    testWidgets('should show error message on share failure', 
+        (WidgetTester tester) async {
+      // This test would require mocking the share service to throw an error
+      // Implementation depends on how error handling is done in ShareDialog
+    });
+
+    testWidgets('should display hashtags', (WidgetTester tester) async {
+      // Arrange & Act
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.text('#วัว'), findsOneWidget);
+      expect(find.text('#โคเนื้อ'), findsOneWidget);
+      expect(find.text('#ปศุสัตว์'), findsOneWidget);
+    });
+
+    testWidgets('should allow scrolling when content overflows', 
+        (WidgetTester tester) async {
+      // Arrange
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      // Assert - Should have scrollable widget
+      expect(find.byType(SingleChildScrollView), findsOneWidget);
+    });
+  });
+
+  group('ShareDialog Accessibility Tests', () {
+    testWidgets('should have semantic labels for screen readers', 
+        (WidgetTester tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: ShareDialog(
+            listing: _createMockListing(),
+            livestock: _createMockLivestock(),
+            userId: 'user123',
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      // Check for semantic labels
+      expect(find.bySemanticsLabel('Share to social media'), findsWidgets);
+    });
+
+    testWidgets('buttons should have sufficient tap targets', 
+        (WidgetTester tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: ShareDialog(
+            listing: _createMockListing(),
+            livestock: _createMockLivestock(),
+            userId: 'user123',
+          ),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      // Check button sizes (should be at least 48x48 for accessibility)
+      final buttons = find.byType(ElevatedButton);
+      for (final button in buttons.evaluate()) {
+        final size = tester.getSize(find.byWidget(button.widget));
+        expect(size.height, greaterThanOrEqualTo(40));
+      }
+    });
+  });
+}
+
+// Helper functions
+MarketListing _createMockListing() {
+  return MarketListing(
+    id: 'listing123',
+    farmId: 'farm123',
+    livestockId: 'livestock123',
+    askingPrice: 45000,
+    isNegotiable: true,
+    listedDate: DateTime.now(),
+    status: 'active',
+    viewCount: 0,
+    createdAt: DateTime.now(),
+    shareTitle: 'ขายโคบราห์มัน',
+    shareDescription: 'โคเนื้อคุณภาพดี',
+    shareTags: ['#วัว', '#โคเนื้อ'],
+  );
+}
+
+Livestock _createMockLivestock() {
+  return Livestock(
+    id: 'livestock123',
+    name: 'โคบราห์มัน #001',
+    type: LivestockType.cattle,
+    breed: 'บราห์มัน',
+    birthDate: DateTime(2021, 1, 1),
+    gender: 'male',
+    farmId: 'farm123',
+    status: 'active',
+  );
+}

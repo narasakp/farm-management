@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/livestock_provider.dart';
+import '../../providers/survey_provider.dart';
 import '../../models/livestock.dart';
 import '../../utils/responsive_helper.dart';
+import '../../widgets/app_bars/standard_app_bar.dart';
+import '../../widgets/production_records_tab.dart';
+import '../../utils/tab_navigation_mixin.dart';
+import 'dart:math' as math;
 
 class LivestockManagementScreen extends StatefulWidget {
   const LivestockManagementScreen({super.key});
@@ -12,25 +17,57 @@ class LivestockManagementScreen extends StatefulWidget {
   State<LivestockManagementScreen> createState() => _LivestockManagementScreenState();
 }
 
-class _LivestockManagementScreenState extends State<LivestockManagementScreen> with TickerProviderStateMixin {
+class _LivestockManagementScreenState extends State<LivestockManagementScreen> with TickerProviderStateMixin, TabNavigationMixin {
   final TextEditingController _searchController = TextEditingController();
   String _selectedType = 'ทั้งหมด';
   String _selectedStatus = 'ทั้งหมด';
   late TabController _tabController;
   int _selectedIndex = 0;
+  
+  // Pagination for animal cards
+  int _currentPage = 1;
+  static const int _itemsPerPage = 12;
+  
+  // Selected livestock for production records
+  Livestock? _selectedLivestock;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<LivestockProvider>(context, listen: false).loadLivestock('farm1');
+    
+    // Check for tab parameter in URL (e.g., ?tab=4)
+    int initialTab = 0;
+    try {
+      final uri = Uri.base;
+      if (uri.queryParameters.containsKey('tab')) {
+        final tabParam = int.tryParse(uri.queryParameters['tab'] ?? '0');
+        if (tabParam != null && tabParam >= 0 && tabParam < 6) {
+          initialTab = tabParam;
+          print('🔗 Opening tab $initialTab from URL parameter');
+        }
+      }
+    } catch (e) {
+      print('⚠️ Error parsing tab parameter: $e');
+    }
+    
+    _tabController = TabController(length: 6, vsync: this, initialIndex: initialTab);
+    
+    // เริ่มต้น Smart Back Navigation
+    initTabNavigation(_tabController, initialTab: initialTab, fallbackRoute: '/dashboard');
+    
+    // ✅ Lazy loading - delay 300ms เพื่อให้หน้าโหลดเร็วก่อน
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        Provider.of<LivestockProvider>(context, listen: false).loadLivestock('farm1');
+        Provider.of<SurveyProvider>(context, listen: false).loadSurveys();
+      }
     });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    disposeTabNavigation(); // ปิด Smart Back Navigation
     _tabController.dispose();
     super.dispose();
   }
@@ -38,33 +75,18 @@ class _LivestockManagementScreenState extends State<LivestockManagementScreen> w
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('จัดการปศุสัตว์'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.transparent,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF228B22).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.home_rounded, size: 28),
-            color: const Color(0xFF228B22).withOpacity(0.8),
-            onPressed: () => context.go('/dashboard'),
-            tooltip: 'หน้าแรก',
-          ),
-        ),
+      appBar: StandardAppBar(
+        type: AppBarType.main,
+        title: 'จัดการปศุสัตว์',
+        onBackPressed: handleSmartBackPress, // ⭐ ใช้ Smart Back Navigation
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.blue,
+          labelColor: const Color(0xFF8B4513),
           unselectedLabelColor: Colors.grey,
-          indicatorColor: Colors.blue,
+          indicatorColor: const Color(0xFF8B4513),
           isScrollable: true,
           tabs: const [
+            Tab(text: 'ภาพรวม', icon: Icon(Icons.dashboard, size: 20)),
             Tab(text: 'ทะเบียนสัตว์', icon: Icon(Icons.pets, size: 20)),
             Tab(text: 'สุขภาพ', icon: Icon(Icons.favorite, size: 20)),
             Tab(text: 'การผสมพันธุ์', icon: Icon(Icons.family_restroom, size: 20)),
@@ -76,6 +98,7 @@ class _LivestockManagementScreenState extends State<LivestockManagementScreen> w
       body: TabBarView(
         controller: _tabController,
         children: [
+          _buildOverviewTab(),
           _buildLivestockRegistry(),
           _buildHealthRecords(),
           _buildBreedingRecords(),
@@ -91,30 +114,647 @@ class _LivestockManagementScreenState extends State<LivestockManagementScreen> w
     );
   }
 
-  // ทะเบียนสัตว์ - Tab แรก
+  // ภาพรวม - Tab แรก (NEW)
+  Widget _buildOverviewTab() {
+    return Consumer<SurveyProvider>(
+      builder: (context, surveyProvider, child) {
+        print('🔍 DEBUG Overview Tab:');
+        print('  - isLoading: ${surveyProvider.isLoading}');
+        print('  - error: ${surveyProvider.error}');
+        
+        final stats = surveyProvider.getSurveyStatistics();
+        print('  - stats: $stats');
+        
+        final totalAnimals = stats['totalAnimals'] ?? 0;
+        final rawLivestockByType = stats['livestockByType'] ?? {};
+        print('  - totalAnimals: $totalAnimals');
+        print('  - rawLivestockByType: $rawLivestockByType');
+        
+        // แปลง livestock types เป็น Map<String, int> และใช้ชื่อไทย
+        final livestockByType = _convertToLivestockMap(rawLivestockByType);
+        print('  - livestockByType (Thai names): $livestockByType');
+
+        // Show loading
+        if (surveyProvider.isLoading) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('กำลังโหลดข้อมูล...'),
+              ],
+            ),
+          );
+        }
+
+        // Show error
+        if (surveyProvider.error != null) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text('เกิดข้อผิดพลาด: ${surveyProvider.error}'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => surveyProvider.loadSurveys(),
+                  child: const Text('ลองใหม่'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Show empty state
+        if (totalAnimals == 0) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.pets, size: 64, color: Colors.grey),
+                const SizedBox(height: 16),
+                const Text('ยังไม่มีข้อมูลปศุสัตว์'),
+                const SizedBox(height: 8),
+                const Text('กรุณาเพิ่มข้อมูลจากแบบฟอร์มสำรวจ'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => context.go('/survey'),
+                  child: const Text('ไปสำรวจข้อมูล'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            await surveyProvider.loadSurveys();
+          },
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTotalSummaryCard(totalAnimals, livestockByType),
+                const SizedBox(height: 24),
+                _buildDonutChartSection(livestockByType, totalAnimals),
+                const SizedBox(height: 24),
+                Text(
+                  'รายละเอียดแต่ละชนิด',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF8B4513),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildAnimalTypeGrid(livestockByType),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Summary Card - ตัวเลขใหญ่
+  Widget _buildTotalSummaryCard(int total, Map<String, int> livestockByType) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF8B4513).withOpacity(0.1),
+            const Color(0xFFFFF8E1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF8B4513).withOpacity(0.3),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF8B4513).withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.pets,
+            size: 48,
+            color: const Color(0xFF8B4513).withOpacity(0.8),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            total.toString(),
+            style: const TextStyle(
+              fontSize: 64,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF8B4513),
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'ปศุสัตว์ทั้งหมด',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 16,
+            runSpacing: 12,
+            alignment: WrapAlignment.center,
+            children: _buildQuickStats(livestockByType),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Quick Stats Row - Top 6 (Sorted มาก -> น้อย)
+  List<Widget> _buildQuickStats(Map<String, int> livestockByType) {
+    // Sort จากมาก -> น้อย
+    final sortedEntries = livestockByType.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    
+    // เลือก Top 6
+    final topEntries = sortedEntries.take(6).toList();
+    
+    final List<Widget> stats = [];
+    
+    for (int i = 0; i < topEntries.length; i++) {
+      final entry = topEntries[i];
+      final color = _getLivestockColor(i);
+      
+      stats.add(
+        InkWell(
+          onTap: () {
+            // Switch to Registry tab with filter
+            setState(() {
+              _selectedType = entry.key; // ตั้ง filter ตามชนิดที่คลิก
+            });
+            _tabController.animateTo(1); // ไปที่ tab ทะเบียนสัตว์
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Column(
+            children: [
+              Text(
+                _getLivestockEmoji(entry.key),
+                style: const TextStyle(fontSize: 32), // emoji ขนาด 32
+              ),
+              const SizedBox(height: 6),
+              Text(
+                entry.value.toString(),
+                style: TextStyle(
+                  fontSize: 22, // ใหญ่ขึ้น 18→22
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              Text(
+                entry.key,
+                style: TextStyle(
+                  fontSize: 14, // ใหญ่ขึ้น 11→14
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    return stats;
+  }
+
+  // Donut Chart Section
+  Widget _buildDonutChartSection(Map<String, int> livestockByType, int total) {
+    if (total == 0) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'สัดส่วนตามชนิดสัตว์',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF8B4513),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildSimpleDonutChart(livestockByType, total),
+          const SizedBox(height: 20),
+          _buildChartLegend(livestockByType, total),
+        ],
+      ),
+    );
+  }
+
+  // Simple Donut Chart (no external package) with Hover
+  Widget _buildSimpleDonutChart(Map<String, int> livestockByType, int total) {
+    // Prepare data: Top 7 + Others
+    final donutData = _prepareDonutData(livestockByType);
+    
+    return Center(
+      child: _DonutChartWithHover(
+        livestockByType: donutData,
+        total: total,
+        colorGetter: _getLivestockColor,
+        onSegmentTap: (typeName) {
+          // เมื่อคลิกที่ segment ของ Pie Chart
+          if (typeName != 'อื่นๆ') {
+            setState(() {
+              _selectedType = typeName; // ตั้งค่า filter
+            });
+            _tabController.animateTo(1); // ไปที่ Tab ทะเบียนสัตว์
+          }
+        },
+      ),
+    );
+  }
+  
+  // Prepare Donut Data: Top 7 + "อื่นๆ"
+  Map<String, int> _prepareDonutData(Map<String, int> allData) {
+    const int maxSegments = 8; // แสดงสูงสุด 8 segments (7 + อื่นๆ)
+    
+    // Sort จากมาก -> น้อย
+    final sortedEntries = allData.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    
+    // ถ้าน้อยกว่าหรือเท่ากับ 8 ชนิด แสดงทั้งหมด
+    if (sortedEntries.length <= maxSegments) {
+      return Map.fromEntries(sortedEntries);
+    }
+    
+    // เลือก Top 7
+    final topEntries = sortedEntries.take(7).toList();
+    
+    // รวมที่เหลือเป็น "อื่นๆ"
+    final othersCount = sortedEntries.skip(7).fold<int>(
+      0, 
+      (sum, entry) => sum + entry.value,
+    );
+    
+    final result = Map<String, int>.fromEntries(topEntries);
+    if (othersCount > 0) {
+      result['อื่นๆ'] = othersCount;
+    }
+    
+    return result;
+  }
+
+  // Chart Legend - Dynamic (แสดง Top 7 + อื่นๆ)
+  Widget _buildChartLegend(Map<String, int> livestockByType, int total) {
+    // Prepare data เหมือน donut chart
+    final legendData = _prepareDonutData(livestockByType);
+    
+    int colorIndex = 0;
+    return Wrap(
+      spacing: 16,
+      runSpacing: 12,
+      children: legendData.entries.where((e) => e.value > 0).map((entry) {
+        final percentage = ((entry.value / total) * 100).toStringAsFixed(1);
+        final color = _getLivestockColor(colorIndex);
+        colorIndex++;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${entry.key}: ${entry.value} ($percentage%)',
+              style: const TextStyle(fontSize: 14),
+            ),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  // Animal Type Grid Cards - แสดงทุกชนิด (Sorted + Pagination)
+  Widget _buildAnimalTypeGrid(Map<String, int> livestockByType) {
+    // Sort จากมาก -> น้อย
+    final sortedEntries = livestockByType.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    
+    // Calculate pagination
+    final totalItems = sortedEntries.length;
+    final totalPages = (totalItems / _itemsPerPage).ceil();
+    final startIndex = (_currentPage - 1) * _itemsPerPage;
+    final endIndex = (startIndex + _itemsPerPage).clamp(0, totalItems);
+    
+    // Get items for current page
+    final displayItems = sortedEntries.sublist(startIndex, endIndex);
+    
+    return Column(
+      children: [
+        // Grid Cards
+        GridView.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: ResponsiveHelper.isMobile(context) ? 2 : 6,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+            childAspectRatio: ResponsiveHelper.isMobile(context) ? 0.75 : 0.85,
+          ),
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: displayItems.length,
+          itemBuilder: (context, index) {
+            final entry = displayItems[index];
+            final globalIndex = startIndex + index; // For color consistency
+            final color = _getLivestockColor(globalIndex);
+            final emoji = _getLivestockEmoji(entry.key);
+            
+            return _buildAnimalTypeCard(
+              entry.key,
+              entry.value,
+              emoji,
+              color,
+            );
+          },
+        ),
+        
+        // Pagination Controls (if needed)
+        if (totalPages > 1) ...[
+          const SizedBox(height: 24),
+          _buildPaginationControls(totalPages),
+        ],
+      ],
+    );
+  }
+  
+  // Pagination Controls
+  Widget _buildPaginationControls(int totalPages) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.chevron_left),
+          onPressed: _currentPage > 1
+              ? () {
+                  setState(() {
+                    _currentPage--;
+                  });
+                }
+              : null,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          'หน้า $_currentPage / $totalPages',
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          icon: const Icon(Icons.chevron_right),
+          onPressed: _currentPage < totalPages
+              ? () {
+                  setState(() {
+                    _currentPage++;
+                  });
+                }
+              : null,
+        ),
+      ],
+    );
+  }
+
+  // Animal Type Card - เหมาะกับผู้สูงอายุ 60+ (ใช้ Emoji)
+  Widget _buildAnimalTypeCard(String name, int count, String emoji, Color color) {
+    return InkWell(
+      onTap: () {
+        // Switch to Registry tab with filter
+        setState(() {
+          _selectedType = name; // ตั้ง filter ตามชนิดที่คลิก
+        });
+        _tabController.animateTo(1);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              color.withOpacity(0.15),
+              color.withOpacity(0.08),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.4), width: 2),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              emoji,
+              style: const TextStyle(fontSize: 48), // emoji ขนาด 48
+            ), // รูปสัตว์จริง
+            const SizedBox(height: 12),
+            Text(
+              count.toString(),
+              style: TextStyle(
+                fontSize: 32, // ใหญ่ขึ้น 24→32
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              name,
+              style: TextStyle(
+                fontSize: 16, // ใหญ่ขึ้น 13→16
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper: แปลง livestock types เป็น Map<String, int> พร้อมชื่อไทย
+  Map<String, int> _convertToLivestockMap(dynamic rawData) {
+    final Map<String, int> result = {};
+
+    if (rawData == null) return result;
+
+    // Convert to Map<String, dynamic>
+    final Map<String, dynamic> data = Map<String, dynamic>.from(rawData as Map);
+
+    data.forEach((key, value) {
+      final count = (value is int) ? value : 0;
+      
+      if (count > 0) {
+        // แปลง key เป็นชื่อไทยจาก LivestockType enum
+        final thaiName = _getLivestockThaiName(key);
+        result[thaiName] = count;
+      }
+    });
+
+    print('🔍 Converted livestock: $result');
+    return result;
+  }
+
+  // แปลง livestock_type เป็นชื่อไทย
+  String _getLivestockThaiName(String englishKey) {
+    try {
+      // พยายามหา LivestockType จาก enum
+      final livestockType = LivestockType.values.firstWhere(
+        (type) => type.name == englishKey,
+        orElse: () => LivestockType.other,
+      );
+      return livestockType.displayName;
+    } catch (e) {
+      print('⚠️ Unknown livestock type: $englishKey');
+      return englishKey; // ถ้าไม่เจอให้ใช้ชื่อ key เดิม
+    }
+  }
+
+  // ดึง emoji สำหรับสัตว์แต่ละชนิด (รูปสัตว์จริง)
+  String _getLivestockEmoji(String thaiName) {
+    // โค (Cow) - 🐄
+    if (thaiName.contains('โคเนื้อ')) return '🐂'; // โคเนื้อ
+    if (thaiName.contains('โคนม')) return '🐄'; // โคนม
+    
+    // กระบือ (Buffalo) - 🐃
+    if (thaiName.contains('กระบือ')) return '🐃'; // กระบือ
+    
+    // สุกร (Pig) - 🐷🐖
+    if (thaiName.contains('สุกร')) return '🐷'; // สุกร
+    
+    // ไก่ (Chicken) - 🐔🍗🥚
+    if (thaiName.contains('ไก่เนื้อ')) return '🍗'; // ไก่เนื้อ
+    if (thaiName.contains('ไก่ไข่')) return '🥚'; // ไก่ไข่
+    if (thaiName.contains('ไก่พ่อ-แม่') || thaiName.contains('ไก่ปู่-ย่า')) return '🐣'; // พันธุ์
+    if (thaiName.contains('ไก่')) return '🐔'; // ไก่ทั่วไป
+    
+    // เป็ด (Duck) - 🦆🥚
+    if (thaiName.contains('เป็ดเทศ')) return '🦆'; // เป็ดเทศ
+    if (thaiName.contains('เป็ดไข่')) return '🥚'; // เป็ดไข่
+    if (thaiName.contains('เป็ด')) return '🦆'; // เป็ดทั่วไป
+    
+    // นกกระทา (Quail) - 🐦
+    if (thaiName.contains('นกกระทา') || thaiName.contains('กระทา')) return '🐦'; // นกกระทา
+    
+    // แพะ (Goat) - 🐐
+    if (thaiName.contains('แพะ')) return '🐐'; // แพะ
+    
+    // แกะ (Sheep) - 🐑
+    if (thaiName.contains('แกะ')) return '🐑'; // แกะ
+    
+    // สัตว์เลี้ยง (Pets)
+    if (thaiName.contains('สุนัข')) return '🐕'; // สุนัข
+    if (thaiName.contains('แมว')) return '🐈'; // แมว
+    if (thaiName.contains('นกสวยงาม')) return '🦜'; // นกสวยงาม
+    if (thaiName.contains('ปลาสวยงาม')) return '🐠'; // ปลาสวยงาม
+    
+    // สัตว์น้ำ (Aquatic)
+    if (thaiName.contains('ปลาน้ำจืด')) return '🐟'; // ปลาน้ำจืด
+    if (thaiName.contains('ปลาน้ำเค็ม')) return '🐠'; // ปลาน้ำเค็ม
+    if (thaiName.contains('กุ้ง')) return '🦐'; // กุ้ง
+    if (thaiName.contains('ปู')) return '🦀'; // ปู
+    
+    // แมลง (Insects)
+    if (thaiName.contains('จิ้งหรีด')) return '🦗'; // จิ้งหรีด
+    if (thaiName.contains('หนอนไหม')) return '🐛'; // หนอนไหม
+    if (thaiName.contains('ผึ้ง')) return '🐝'; // ผึ้ง
+    
+    // อื่นๆ
+    if (thaiName.contains('อื่น')) return '🐾'; // อื่นๆ
+    
+    return '🐾'; // default
+  }
+
+  // ดึงสีตามลำดับ
+  Color _getLivestockColor(int index) {
+    final colors = [
+      const Color(0xFF8B4513), // Brown
+      const Color(0xFF228B22), // Green
+      const Color(0xFFDAA520), // Yellow
+      const Color(0xFF4682B4), // Blue
+      const Color(0xFFFF8C00), // Orange
+      const Color(0xFF9C27B0), // Purple
+      const Color(0xFFE91E63), // Pink
+      const Color(0xFF00BCD4), // Cyan
+      const Color(0xFF8BC34A), // Light Green
+      const Color(0xFFFF5722), // Deep Orange
+    ];
+    return colors[index % colors.length];
+  }
+
+  // ทะเบียนสัตว์ - Tab ที่สอง (ดึงจาก survey_livestock)
   Widget _buildLivestockRegistry() {
-    return Consumer<LivestockProvider>(
+    return Consumer<SurveyProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        // Debug: แสดงจำนวนข้อมูลที่โหลดได้
-        print('Livestock count: ${provider.livestock.length}');
+        // ดึงข้อมูลจาก survey_livestock (แบบ grouped)
+        final allLivestock = provider.getGroupedLivestockFromSurveys();
+        print('📊 Total grouped livestock: ${allLivestock.length}');
         
-        final filteredLivestock = _getFilteredLivestock(provider.livestock);
-        print('Filtered livestock count: ${filteredLivestock.length}');
+        final filteredLivestock = _getFilteredSurveyLivestock(allLivestock);
+        print('✅ Filtered livestock count: ${filteredLivestock.length}');
 
-        if (provider.livestock.isEmpty) {
-          return const Center(
+        if (allLivestock.isEmpty) {
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.pets, size: 64, color: Colors.grey),
-                SizedBox(height: 16),
-                Text('ไม่พบข้อมูลปศุสัตว์', style: TextStyle(fontSize: 18, color: Colors.grey)),
-                SizedBox(height: 8),
-                Text('กดปุ่ม + เพื่อเพิ่มข้อมูลสัตว์', style: TextStyle(color: Colors.grey)),
+                const Text('🐾', style: TextStyle(fontSize: 64)),
+                const SizedBox(height: 16),
+                const Text('ไม่พบข้อมูลปศุสัตว์', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                const SizedBox(height: 8),
+                const Text('กรุณาบันทึกข้อมูลจากแบบฟอร์มสำรวจ', style: TextStyle(color: Colors.grey)),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => context.go('/survey'),
+                  icon: const Text('📋', style: TextStyle(fontSize: 20)),
+                  label: const Text('ไปสำรวจข้อมูล'),
+                ),
               ],
             ),
           );
@@ -122,10 +762,10 @@ class _LivestockManagementScreenState extends State<LivestockManagementScreen> w
 
         return Column(
           children: [
-            _buildSearchAndFilter(),
-            _buildSummaryCards(provider),
+            _buildSearchAndFilterForSurvey(),
+            _buildSummaryCardsFromSurvey(filteredLivestock),
             Expanded(
-              child: _buildLivestockList(filteredLivestock),
+              child: _buildSurveyLivestockList(filteredLivestock),
             ),
           ],
         );
@@ -173,15 +813,188 @@ class _LivestockManagementScreenState extends State<LivestockManagementScreen> w
     );
   }
 
-  // ผลผลิต - Tab ที่ห้า
+  // ผลผลิต - Tab ที่ห้า (NEW - Connected to API)
   Widget _buildProductionRecords() {
+    return Consumer<LivestockProvider>(
+      builder: (context, livestockProvider, child) {
+        // If no livestock selected, show selection UI
+        if (_selectedLivestock == null) {
+          return _buildLivestockSelector(livestockProvider);
+        }
+        
+        // Show production records for selected livestock
+        return Column(
+          children: [
+            _buildSelectedLivestockInfo(),
+            Expanded(
+              child: ProductionRecordsTab(livestock: _selectedLivestock),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  /// Livestock selector for production records
+  Widget _buildLivestockSelector(LivestockProvider provider) {
+    final livestock = provider.livestock;
+    
+    if (livestock.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.pets, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'ยังไม่มีสัตว์ในระบบ',
+              style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'กรุณาเพิ่มสัตว์ก่อนบันทึกผลผลิต',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
+    
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildProductionSummary(),
+        Container(
+          padding: const EdgeInsets.all(16),
+          color: Colors.grey[50],
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline, color: Colors.blue),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'เลือกสัตว์เพื่อดูและบันทึกผลผลิต',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+        ),
         Expanded(
-          child: _buildProductionList(),
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: livestock.length,
+            itemBuilder: (context, index) {
+              final animal = livestock[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.green[100],
+                    child: Text(
+                      animal.earTag ?? animal.id.substring(0, 3),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
+                  title: Text(
+                    '${animal.type.displayName} #${animal.earTag ?? animal.id}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    'พันธุ์: ${animal.breed ?? "ไม่ระบุ"} • ${_getAgeText(animal.birthDate)}',
+                  ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    setState(() {
+                      _selectedLivestock = animal;
+                    });
+                  },
+                ),
+              );
+            },
+          ),
         ),
       ],
+    );
+  }
+  
+  /// Calculate age text from birthDate
+  String _getAgeText(DateTime? birthDate) {
+    if (birthDate == null) return 'อายุ: ไม่ระบุ';
+    
+    final now = DateTime.now();
+    final age = now.difference(birthDate);
+    final years = age.inDays ~/ 365;
+    final months = (age.inDays % 365) ~/ 30;
+    
+    if (years > 0) {
+      return 'อายุ: $years ปี${months > 0 ? " $months เดือน" : ""}';
+    } else if (months > 0) {
+      return 'อายุ: $months เดือน';
+    } else {
+      final days = age.inDays;
+      return 'อายุ: $days วัน';
+    }
+  }
+
+  /// Show selected livestock info with back button
+  Widget _buildSelectedLivestockInfo() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green[50],
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[300]!),
+        ),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              setState(() {
+                _selectedLivestock = null;
+              });
+            },
+            tooltip: 'กลับไปเลือกสัตว์',
+          ),
+          const SizedBox(width: 8),
+          CircleAvatar(
+            backgroundColor: Colors.green,
+            child: Text(
+              _selectedLivestock!.earTag ?? _selectedLivestock!.id.substring(0, 3),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${_selectedLivestock!.type.displayName} #${_selectedLivestock!.earTag ?? _selectedLivestock!.id}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  'พันธุ์: ${_selectedLivestock!.breed}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -274,10 +1087,10 @@ class _LivestockManagementScreenState extends State<LivestockManagementScreen> w
       child: Row(
         children: [
           Expanded(
-            child: _buildSummaryCard(
+            child: _buildStatCardEmoji(
               'ปศุสัตว์ทั้งหมด',
               provider.livestock.length.toString(),
-              Icons.pets,
+              '🐂', // Changed from Icons.pets to cow emoji
               Colors.blue,
             ),
           ),
@@ -559,39 +1372,289 @@ class _LivestockManagementScreenState extends State<LivestockManagementScreen> w
     return (difference.inDays / 30).round();
   }
 
-  List<Livestock> _getFilteredLivestock(List<Livestock> livestock) {
+  // Search & Filter สำหรับ Survey Livestock
+  Widget _buildSearchAndFilterForSurvey() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.grey[50],
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'ค้นหาชื่อเกษตรกร หรือชนิดสัตว์...',
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+        ),
+        onChanged: (value) {
+          setState(() {});
+        },
+      ),
+    );
+  }
+
+  // Summary Cards จาก Survey (grouped data) - Updated v2
+  Widget _buildSummaryCardsFromSurvey(List<Map<String, dynamic>> livestock) {
+    final totalCount = livestock.fold<int>(0, (sum, item) => sum + (item['totalCount'] as int));
+    final uniqueFarmers = livestock.map((e) => e['farmerId']).toSet().length;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.grey[50],
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildStatCardEmoji('จำนวนสัตว์', totalCount.toString(), '🐂', Colors.blue), // Force rebuild 18:41
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildStatCardEmoji('จำนวนเกษตรกร', uniqueFarmers.toString(), '👨‍🌾', Colors.green),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCardEmoji(String label, String value, String emoji, Color color) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 200;
+        return Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 2 : 8,
+            vertical: isMobile ? 2 : 8,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withOpacity(0.3)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  emoji,
+                  style: TextStyle(fontSize: isMobile ? 14 : 24),
+                  maxLines: 1,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: isMobile ? 13 : 18,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: isMobile ? 7 : 11,
+                    color: Colors.grey[600],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // List สำหรับ Survey Livestock (แบบ grouped)
+  Widget _buildSurveyLivestockList(List<Map<String, dynamic>> livestock) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        await Provider.of<SurveyProvider>(context, listen: false).loadSurveys();
+      },
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: livestock.length,
+        itemBuilder: (context, index) {
+          final animal = livestock[index];
+          final details = animal['details'] as List<Map<String, dynamic>>;
+          final color = _getLivestockColor(index % 10);
+          
+          return Card(
+            margin: const EdgeInsets.only(bottom: 16),
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: color.withOpacity(0.3), width: 1),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: color.withOpacity(0.2),
+                        radius: 24,
+                        child: Text(
+                          _getLivestockEmoji(animal['typeName']),
+                          style: const TextStyle(fontSize: 28),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              animal['typeName'],
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '👤 ${animal['farmerName']}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              '📍 ${animal['farmerAddress']}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Total badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: color.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: color.withOpacity(0.3)),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              '${animal['totalCount']}',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
+                            ),
+                            Text(
+                              'ตัว',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  // Divider
+                  if (details.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Divider(color: color.withOpacity(0.2)),
+                    const SizedBox(height: 8),
+                  ],
+                  
+                  // Details
+                  ...details.map((detail) {
+                    final ageGroup = detail['ageGroup'] as String?;
+                    final count = detail['count'] as int;
+                    
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              ageGroup ?? 'ไม่ระบุกลุ่ม',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: color.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$count ตัว',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: color,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Filter สำหรับ survey_livestock
+  List<Map<String, dynamic>> _getFilteredSurveyLivestock(List<Map<String, dynamic>> livestock) {
     var filtered = livestock;
 
-    // Filter by search query
+    // Filter by search query (ค้นหาจากชื่อเกษตรกร)
     if (_searchController.text.isNotEmpty) {
       filtered = filtered.where((animal) =>
-          animal.tagNumber.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-          (animal.breed?.toLowerCase().contains(_searchController.text.toLowerCase()) ?? false)).toList();
+          animal['farmerName'].toLowerCase().contains(_searchController.text.toLowerCase()) ||
+          animal['typeName'].toLowerCase().contains(_searchController.text.toLowerCase())).toList();
     }
 
-    // Filter by type
+    // Filter by type - รองรับชื่อไทยจาก Overview
     if (_selectedType != 'ทั้งหมด') {
-      filtered = filtered.where((animal) => _getAnimalTypeName(animal.type.name) == _selectedType).toList();
-    }
-
-    // Filter by status
-    if (_selectedStatus != 'ทั้งหมด') {
-      String statusToMatch = _selectedStatus;
-      switch (_selectedStatus) {
-        case 'แข็งแรง':
-          statusToMatch = 'healthy';
-          break;
-        case 'ป่วย':
-          statusToMatch = 'sick';
-          break;
-        case 'รักษา':
-          statusToMatch = 'sick';
-          break;
-        case 'กักกัน':
-          statusToMatch = 'sick';
-          break;
-      }
-      filtered = filtered.where((animal) => animal.healthStatus == statusToMatch).toList();
+      filtered = filtered.where((animal) {
+        final typeName = animal['typeName'] as String;
+        return typeName == _selectedType;
+      }).toList();
     }
 
     return filtered;
@@ -956,9 +2019,13 @@ class _LivestockManagementScreenState extends State<LivestockManagementScreen> w
         });
       },
       type: BottomNavigationBarType.fixed,
-      selectedItemColor: Colors.blue,
+      selectedItemColor: const Color(0xFF8B4513),
       unselectedItemColor: Colors.grey,
       items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.dashboard),
+          label: 'ภาพรวม',
+        ),
         BottomNavigationBarItem(
           icon: Icon(Icons.pets),
           label: 'ทะเบียน',
@@ -985,7 +2052,7 @@ class _LivestockManagementScreenState extends State<LivestockManagementScreen> w
 
   // ฟังก์ชันสำหรับแสดง Dialog เพิ่มข้อมูล
   void _showAddDialog() {
-    final tabs = ['ทะเบียนสัตว์', 'บันทึกสุขภาพ', 'บันทึกการผสม', 'บันทึกอาหาร', 'บันทึกผลผลิต'];
+    final tabs = ['ภาพรวม', 'ทะเบียนสัตว์', 'บันทึกสุขภาพ', 'บันทึกการผสม', 'บันทึกอาหาร', 'บันทึกผลผลิต'];
     
     showDialog(
       context: context,
@@ -1245,5 +2312,320 @@ class _LivestockManagementScreenState extends State<LivestockManagementScreen> w
   IconData _getProductionIcon(int index) {
     final icons = [Icons.local_drink, Icons.egg, Icons.local_drink, Icons.egg_alt, Icons.local_drink];
     return icons[index % icons.length];
+  }
+
+  // Old IconData function removed - using _getLivestockEmoji() instead
+}
+
+// Donut Chart Widget with Hover
+class _DonutChartWithHover extends StatefulWidget {
+  final Map<String, int> livestockByType;
+  final int total;
+  final Color Function(int) colorGetter;
+  final Function(String)? onSegmentTap;
+
+  const _DonutChartWithHover({
+    required this.livestockByType,
+    required this.total,
+    required this.colorGetter,
+    this.onSegmentTap,
+  });
+
+  @override
+  State<_DonutChartWithHover> createState() => _DonutChartWithHoverState();
+}
+
+class _DonutChartWithHoverState extends State<_DonutChartWithHover> {
+  String? _hoveredSegment;
+  int? _hoveredCount;
+  Offset? _mousePosition;
+
+  void _handleHover(PointerEvent details) {
+    final RenderBox box = context.findRenderObject() as RenderBox;
+    final localPosition = box.globalToLocal(details.position);
+    
+    final center = Offset(box.size.width / 2, box.size.height / 2);
+    final dx = localPosition.dx - center.dx;
+    final dy = localPosition.dy - center.dy;
+    final distance = math.sqrt(dx * dx + dy * dy);
+    
+    final radius = math.min(box.size.width, box.size.height) / 2;
+    final innerRadius = radius * 0.6;
+    
+    // Check if mouse is in donut area
+    if (distance >= innerRadius && distance <= radius) {
+      // Calculate angle
+      var angle = math.atan2(dy, dx);
+      angle = (angle + math.pi / 2) % (2 * math.pi);
+      if (angle < 0) angle += 2 * math.pi;
+      
+      // Find which segment
+      double currentAngle = 0;
+      int index = 0;
+      
+      for (var entry in widget.livestockByType.entries) {
+        if (entry.value > 0) {
+          final sweepAngle = (entry.value / widget.total) * 2 * math.pi;
+          
+          if (angle >= currentAngle && angle < currentAngle + sweepAngle) {
+            setState(() {
+              _hoveredSegment = entry.key;
+              _hoveredCount = entry.value;
+              _mousePosition = details.position;
+            });
+            return;
+          }
+          
+          currentAngle += sweepAngle;
+          index++;
+        }
+      }
+    }
+    
+    // Not hovering on any segment
+    setState(() {
+      _hoveredSegment = null;
+      _hoveredCount = null;
+      _mousePosition = null;
+    });
+  }
+
+  void _handleExit(PointerEvent details) {
+    setState(() {
+      _hoveredSegment = null;
+      _hoveredCount = null;
+      _mousePosition = null;
+    });
+  }
+
+  void _handleTap(TapUpDetails details) {
+    final RenderBox box = context.findRenderObject() as RenderBox;
+    final localPosition = box.globalToLocal(details.globalPosition);
+    
+    final center = Offset(box.size.width / 2, box.size.height / 2);
+    final dx = localPosition.dx - center.dx;
+    final dy = localPosition.dy - center.dy;
+    final distance = math.sqrt(dx * dx + dy * dy);
+    
+    final radius = math.min(box.size.width, box.size.height) / 2;
+    final innerRadius = radius * 0.6;
+    
+    // Check if tap is in donut area
+    if (distance >= innerRadius && distance <= radius) {
+      // Calculate angle
+      var angle = math.atan2(dy, dx);
+      angle = (angle + math.pi / 2) % (2 * math.pi);
+      if (angle < 0) angle += 2 * math.pi;
+      
+      // Find which segment was tapped
+      double currentAngle = 0;
+      
+      for (var entry in widget.livestockByType.entries) {
+        if (entry.value > 0) {
+          final sweepAngle = (entry.value / widget.total) * 2 * math.pi;
+          
+          if (angle >= currentAngle && angle < currentAngle + sweepAngle) {
+            // Segment found - call callback
+            widget.onSegmentTap?.call(entry.key);
+            return;
+          }
+          
+          currentAngle += sweepAngle;
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: _hoveredSegment != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      onHover: _handleHover,
+      onExit: _handleExit,
+      child: GestureDetector(
+        onTapUp: _handleTap,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            SizedBox(
+              width: 200,
+              height: 200,
+              child: CustomPaint(
+                painter: _DonutChartPainter(
+                  widget.livestockByType,
+                  widget.total,
+                  widget.colorGetter,
+                  _hoveredSegment,
+                ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      widget.total.toString(),
+                      style: const TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF8B4513),
+                      ),
+                    ),
+                    Text(
+                      'ตัว',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Tooltip
+          if (_hoveredSegment != null)
+            Positioned(
+              left: 220,
+              top: 70,
+              child: IgnorePointer(
+                child: Material(
+                  color: Colors.transparent,
+                  elevation: 8,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 180),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF8B4513).withOpacity(0.3), width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _hoveredSegment!,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF8B4513),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.pets, size: 14, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(
+                              'จำนวน: $_hoveredCount ตัว',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8B4513).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${((_hoveredCount! / widget.total) * 100).toStringAsFixed(1)}%',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF8B4513),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+        ),
+      ),
+    );
+  }
+}
+
+// Custom Painter for Donut Chart - Dynamic Colors
+class _DonutChartPainter extends CustomPainter {
+  final Map<String, int> livestockByType;
+  final int total;
+  final Color Function(int) colorGetter;
+  final String? hoveredSegment;
+
+  _DonutChartPainter(
+    this.livestockByType,
+    this.total,
+    this.colorGetter,
+    this.hoveredSegment,
+  );
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (total == 0) return;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = math.min(size.width, size.height) / 2;
+    final innerRadius = radius * 0.6;
+
+    double startAngle = -math.pi / 2; // Start from top
+    int colorIndex = 0;
+
+    livestockByType.forEach((type, count) {
+      if (count > 0) {
+        final sweepAngle = (count / total) * 2 * math.pi;
+        final baseColor = colorGetter(colorIndex);
+        
+        // Highlight if hovered
+        final isHovered = type == hoveredSegment;
+        final color = isHovered 
+            ? Color.lerp(baseColor, Colors.white, 0.2)! 
+            : baseColor;
+        
+        // Draw outer arc - ไม่เปลี่ยน strokeWidth
+        final paint = Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = radius - innerRadius;
+
+        final rect = Rect.fromCircle(
+          center: center, 
+          radius: (radius + innerRadius) / 2
+        );
+        canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
+
+        startAngle += sweepAngle;
+        colorIndex++;
+      }
+    });
+
+    // Draw white circle in center for donut effect
+    final centerPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, innerRadius, centerPaint);
+  }
+
+  @override
+  bool shouldRepaint(_DonutChartPainter oldDelegate) {
+    return oldDelegate.livestockByType != livestockByType || 
+           oldDelegate.total != total ||
+           oldDelegate.hoveredSegment != hoveredSegment;
   }
 }

@@ -14,6 +14,15 @@ class AppTheme {
 
   static ThemeData get lightTheme {
     return ThemeData(
+      // ปรับขนาด Icon ทั้งระบบ
+      iconTheme: const IconThemeData(
+        size: 32, // เพิ่มจาก 24 (default) → 32 (+33%)
+        color: textPrimaryColor,
+      ),
+      primaryIconTheme: const IconThemeData(
+        size: 32,
+        color: Colors.white,
+      ),
       primarySwatch: MaterialColor(
         primaryColor.value,
         <int, Color>{
@@ -50,8 +59,12 @@ class AppTheme {
         centerTitle: true,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,
+        iconTheme: IconThemeData(
+          size: 32, // เพิ่มจาก 24 → 32 (+33%)
+          color: Colors.black87,
+        ),
         titleTextStyle: TextStyle(
-          fontSize: 24,
+          fontSize: 28, // เพิ่มจาก 24 → 28 (+17%)
           fontWeight: FontWeight.bold,
           color: Colors.black87,
         ),
@@ -73,64 +86,68 @@ class AppTheme {
             borderRadius: BorderRadius.circular(8),
           ),
           textStyle: const TextStyle(
-            fontSize: 18,
+            fontSize: 22, // เพิ่มจาก 18 → 22 (+22%)
             fontWeight: FontWeight.w600,
             ),
         ),
       ),
       textTheme: const TextTheme(
+        // Display styles สำหรับ headings ใหญ่
         displayLarge: TextStyle(
-          fontSize: 40,
+          fontSize: 56, // เพิ่มจาก 40 → 56 (+40%)
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
         ),
         displayMedium: TextStyle(
-          fontSize: 36,
+          fontSize: 48, // เพิ่มจาก 36 → 48 (+33%)
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
         ),
         displaySmall: TextStyle(
-          fontSize: 32,
+          fontSize: 42, // เพิ่มจาก 32 → 42 (+31%)
           fontWeight: FontWeight.bold,
           color: textPrimaryColor,
         ),
+        // Headline styles สำหรับ section headers
         headlineLarge: TextStyle(
-          fontSize: 28,
+          fontSize: 38, // เพิ่มจาก 28 → 38 (+36%)
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
         ),
         headlineMedium: TextStyle(
-          fontSize: 24,
+          fontSize: 32, // เพิ่มจาก 24 → 32 (+33%)
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
         ),
         headlineSmall: TextStyle(
-          fontSize: 22,
+          fontSize: 28, // เพิ่มจาก 22 → 28 (+27%)
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
         ),
+        // Title styles สำหรับ card titles
         titleLarge: TextStyle(
-          fontSize: 20,
+          fontSize: 26, // เพิ่มจาก 20 → 26 (+30%)
           fontWeight: FontWeight.w600,
           color: textPrimaryColor,
         ),
         titleMedium: TextStyle(
-          fontSize: 18,
+          fontSize: 22, // เพิ่มจาก 18 → 22 (+22%)
           fontWeight: FontWeight.w500,
           color: textPrimaryColor,
         ),
+        // Body styles สำหรับเนื้อหาทั่วไป (สำคัญที่สุดสำหรับผู้สูงอายุ)
         bodyLarge: TextStyle(
-          fontSize: 18,
+          fontSize: 22, // เพิ่มจาก 18 → 22 (+22%)
           fontWeight: FontWeight.normal,
           color: textPrimaryColor,
         ),
         bodyMedium: TextStyle(
-          fontSize: 16,
+          fontSize: 20, // เพิ่มจาก 16 → 20 (+25%)
           fontWeight: FontWeight.normal,
           color: textSecondaryColor,
         ),
         bodySmall: TextStyle(
-          fontSize: 16,
+          fontSize: 18, // เพิ่มจาก 16 → 18 (+12.5%)
           fontWeight: FontWeight.normal,
           color: textSecondaryColor,
         ),
@@ -154,11 +171,11 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: errorColor),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        labelStyle: const TextStyle(fontSize: 16),
-        hintStyle: const TextStyle(fontSize: 16),
-        helperStyle: const TextStyle(fontSize: 16),
-        errorStyle: const TextStyle(fontSize: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18), // เพิ่ม padding
+        labelStyle: const TextStyle(fontSize: 20), // เพิ่มจาก 16 → 20 (+25%)
+        hintStyle: const TextStyle(fontSize: 20), // เพิ่มจาก 16 → 20 (+25%)
+        helperStyle: const TextStyle(fontSize: 18), // เพิ่มจาก 16 → 18 (+12.5%)
+        errorStyle: const TextStyle(fontSize: 18), // เพิ่มจาก 16 → 18 (+12.5%)
       ),
     );
   }

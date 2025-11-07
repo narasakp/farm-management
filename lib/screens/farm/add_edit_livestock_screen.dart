@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../models/livestock.dart';
 import '../../providers/livestock_provider.dart';
 import '../../providers/farm_provider.dart';
+import '../../widgets/app_bars/standard_app_bar.dart';
 
 class AddEditLivestockScreen extends StatefulWidget {
   final Livestock? livestock;
@@ -120,9 +121,10 @@ class _AddEditLivestockScreenState extends State<AddEditLivestockScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditMode ? 'แก้ไขข้อมูลปศุสัตว์' : 'เพิ่มปศุสัตว์ใหม่'),
-        actions: [
+      appBar: StandardAppBar(
+        type: AppBarType.detail,
+        title: _isEditMode ? 'แก้ไขข้อมูลปศุสัตว์' : 'เพิ่มปศุสัตว์ใหม่',
+        customActions: [
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: _saveForm,

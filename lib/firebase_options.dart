@@ -44,39 +44,38 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR_WEB_API_KEY',
-    appId: 'YOUR_WEB_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'farm-management-system',
-    authDomain: 'farm-management-system.firebaseapp.com',
-    storageBucket: 'farm-management-system.appspot.com',
-    measurementId: 'YOUR_MEASUREMENT_ID',
+    apiKey: 'AIzaSyC4oPUkqScbFlFnQaszWEHxVS4ErEScCgc',
+    appId: '1:222181744079:web:b92044fe44e63ba8f346ba',
+    messagingSenderId: '222181744079',
+    projectId: 'farm-management-system-fae8c',
+    authDomain: 'farm-management-system-fae8c.firebaseapp.com',
+    storageBucket: 'farm-management-system-fae8c.firebasestorage.app',
+    measurementId: 'G-QJ6T37LHQ4',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_ANDROID_API_KEY',
-    appId: 'YOUR_ANDROID_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'farm-management-system',
-    googleAppId: 'YOUR_GOOGLE_APP_ID',
-    storageBucket: 'farm-management-system.appspot.com',
+    apiKey: 'AIzaSyC4oPUkqScbFlFnQaszWEHxVS4ErEScCgc',
+    appId: '1:222181744079:android:PLACEHOLDER',
+    messagingSenderId: '222181744079',
+    projectId: 'farm-management-system-fae8c',
+    storageBucket: 'farm-management-system-fae8c.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'YOUR_IOS_API_KEY',
-    appId: 'YOUR_IOS_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'farm-management-system',
-    storageBucket: 'farm-management-system.appspot.com',
+    apiKey: 'AIzaSyC4oPUkqScbFlFnQaszWEHxVS4ErEScCgc',
+    appId: '1:222181744079:ios:PLACEHOLDER',
+    messagingSenderId: '222181744079',
+    projectId: 'farm-management-system-fae8c',
+    storageBucket: 'farm-management-system-fae8c.firebasestorage.app',
     iosBundleId: 'com.example.livestockFarmManagement',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'YOUR_MACOS_API_KEY',
-    appId: 'YOUR_MACOS_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'farm-management-system',
-    storageBucket: 'farm-management-system.appspot.com',
+    apiKey: 'AIzaSyC4oPUkqScbFlFnQaszWEHxVS4ErEScCgc',
+    appId: '1:222181744079:macos:PLACEHOLDER',
+    messagingSenderId: '222181744079',
+    projectId: 'farm-management-system-fae8c',
+    storageBucket: 'farm-management-system-fae8c.firebasestorage.app',
     iosBundleId: 'com.example.livestockFarmManagement',
   );
 }

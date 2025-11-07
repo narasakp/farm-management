@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Firebase Storage</title>
+</head>
+<body>
+    <h1>Firebase Storage Bucket URL</h1>
+    <p>เปิด URL นี้ใน Browser:</p>
+    <pre>https://console.cloud.google.com/storage/browser/farm-management-system-fae8c.appspot.com?project=farm-management-system-fae8c</pre>
+    
+    <p><strong>ถ้าเปิดได้ และเห็นรายการไฟล์:</strong> ✅ Firebase Storage เปิดแล้ว</p>
+    <p><strong>ถ้าเปิดแล้วขึ้น Error 404:</strong> ❌ Firebase Storage ยังไม่เปิด</p>
+    
+    <br>
+    <hr>
+    <br>
+    
+    <h2>ถ้ายังไม่เปิด ให้เปิดที่นี่:</h2>
+    <a href="https://console.firebase.google.com/project/farm-management-system-fae8c/storage" target="_blank">
+        Firebase Console → Storage
+    </a>
+    
+    <br><br>
+    
+    <h2>หลังจากเปิด Firebase Storage แล้ว:</h2>
+    <ol>
+        <li>กลับมาที่ Google Cloud Console</li>
+        <li>คลิก "Go to a specific path"</li>
+        <li>ใส่: <code>farm-management-system-fae8c.appspot.com</code></li>
+        <li>คลิก "Go"</li>
+        <li>คลิก Tab "Configuration"</li>
+        <li>Scroll ลงหา "CORS Configuration"</li>
+        <li>คลิก "Edit CORS configuration"</li>
+        <li>Paste JSON:
+<pre>[
+  {
+    "origin": ["*"],
+    "method": ["GET"],
+    "responseHeader": ["Content-Type"],
+    "maxAgeSeconds": 3600
+  }
+]</pre>
+        </li>
+        <li>คลิก "Save"</li>
+    </ol>
+</body>
+</html>

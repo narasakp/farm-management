@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../providers/research_provider.dart';
 import '../../models/research_project.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/app_bars/standard_app_bar.dart';
+import '../../utils/tab_navigation_mixin.dart';
 
 class ResearchScreen extends StatefulWidget {
   const ResearchScreen({super.key});
@@ -12,17 +14,19 @@ class ResearchScreen extends StatefulWidget {
   State<ResearchScreen> createState() => _ResearchScreenState();
 }
 
-class _ResearchScreenState extends State<ResearchScreen> with TickerProviderStateMixin {
+class _ResearchScreenState extends State<ResearchScreen> with TickerProviderStateMixin, TabNavigationMixin {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    initTabNavigation(_tabController, initialTab: 0, fallbackRoute: '/dashboard');
   }
 
   @override
   void dispose() {
+    disposeTabNavigation();
     _tabController.dispose();
     super.dispose();
   }
@@ -31,20 +35,10 @@ class _ResearchScreenState extends State<ResearchScreen> with TickerProviderStat
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.home, color: Colors.white),
-          onPressed: () => context.go('/dashboard'),
-          tooltip: 'กลับหน้าหลัก',
-        ),
-        title: Text(
-          'วิจัยและพัฒนา',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: const Color(0xFF228B22),
-        elevation: 0,
+      appBar: StandardAppBar(
+        type: AppBarType.main,
+        title: 'วิจัยและพัฒนา',
+        onBackPressed: handleSmartBackPress,
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,

@@ -208,6 +208,36 @@ class LivestockProvider with ChangeNotifier {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         ),
+        // กระบือ
+        Livestock(
+          id: 'buffalo001',
+          farmId: 'farm1',
+          earTag: 'BUF001',
+          type: LivestockType.buffaloLocal,
+          breed: 'กระบือพื้นเมือง',
+          gender: LivestockGender.male,
+          birthDate: DateTime(2020, 6, 15),
+          weight: 500.0,
+          status: LivestockStatus.healthy,
+          notes: 'กระบือพันธุ์แท้ แข็งแรง',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        // แกะ
+        Livestock(
+          id: 'sheep001',
+          farmId: 'farm1',
+          earTag: 'SHP001',
+          type: LivestockType.sheep,
+          breed: 'แกะพันธุ์ดอร์เปอร์',
+          gender: LivestockGender.female,
+          birthDate: DateTime(2022, 3, 20),
+          weight: 45.0,
+          status: LivestockStatus.healthy,
+          notes: 'แกะพันธุ์ดี คุณภาพสูง',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
       ];
 
       // Mock health records

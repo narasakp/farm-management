@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'livestock.dart';
+import 'social_share.dart';
 
 // การซื้อขายปศุสัตว์และตลาดออนไลน์
 class LivestockMarket {
@@ -128,13 +130,19 @@ class MarketListing {
   final double askingPrice;
   final double? minPrice;
   final String? description;
-  final List<String>? images;
+  final List<String> images; // Required field
   final bool isNegotiable;
   final DateTime listedDate;
   final DateTime? expiryDate;
   final String status; // 'active', 'sold', 'expired', 'withdrawn'
   final int viewCount;
   final DateTime createdAt;
+  
+  // 🆕 Social Commerce Fields
+  final String? shareTitle; // หัวข้อสำหรับแชร์ (catchy title)
+  final String? shareDescription; // คำอธิบายสั้นๆ สำหรับแชร์
+  final List<String>? shareTags; // Hashtags สำหรับ social media
+  final SocialStats? socialStats; // สถิติการแชร์และยอดขาย
 
   MarketListing({
     required this.id,
@@ -143,13 +151,18 @@ class MarketListing {
     required this.askingPrice,
     this.minPrice,
     this.description,
-    this.images,
+    required this.images,
     required this.isNegotiable,
     required this.listedDate,
     this.expiryDate,
     required this.status,
     required this.viewCount,
     required this.createdAt,
+    // Social Commerce
+    this.shareTitle,
+    this.shareDescription,
+    this.shareTags,
+    this.socialStats,
   });
 
   factory MarketListing.fromJson(Map<String, dynamic> json) {
@@ -160,13 +173,20 @@ class MarketListing {
       askingPrice: json['askingPrice'].toDouble(),
       minPrice: json['minPrice']?.toDouble(),
       description: json['description'],
-      images: json['images'] != null ? List<String>.from(json['images']) : null,
+      images: json['images'] != null ? List<String>.from(json['images']) : [],
       isNegotiable: json['isNegotiable'],
       listedDate: DateTime.parse(json['listedDate']),
       expiryDate: json['expiryDate'] != null ? DateTime.parse(json['expiryDate']) : null,
       status: json['status'],
       viewCount: json['viewCount'],
       createdAt: DateTime.parse(json['createdAt']),
+      // Social Commerce
+      shareTitle: json['shareTitle'],
+      shareDescription: json['shareDescription'],
+      shareTags: json['shareTags'] != null ? List<String>.from(json['shareTags']) : null,
+      socialStats: json['socialStats'] != null 
+          ? SocialStats.fromJson(json['socialStats'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -185,6 +205,59 @@ class MarketListing {
       'status': status,
       'viewCount': viewCount,
       'createdAt': createdAt.toIso8601String(),
+      // Social Commerce
+      'shareTitle': shareTitle,
+      'shareDescription': shareDescription,
+      'shareTags': shareTags,
+      'socialStats': socialStats?.toJson(),
+    };
+  }
+  
+  /// สร้าง instance จาก Firestore document
+  factory MarketListing.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return MarketListing(
+      id: doc.id,
+      farmId: data['farmId'] ?? '',
+      livestockId: data['livestockId'] ?? '',
+      askingPrice: (data['askingPrice'] as num?)?.toDouble() ?? 0.0,
+      minPrice: (data['minPrice'] as num?)?.toDouble(),
+      description: data['description'],
+      images: data['images'] != null ? List<String>.from(data['images']) : [],
+      isNegotiable: data['isNegotiable'] ?? false,
+      listedDate: (data['listedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      expiryDate: (data['expiryDate'] as Timestamp?)?.toDate(),
+      status: data['status'] ?? 'active',
+      viewCount: data['viewCount'] ?? 0,
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      shareTitle: data['shareTitle'],
+      shareDescription: data['shareDescription'],
+      shareTags: data['shareTags'] != null ? List<String>.from(data['shareTags']) : null,
+      socialStats: data['socialStats'] != null 
+          ? SocialStats.fromJson(data['socialStats'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+  
+  /// แปลงเป็น Map สำหรับบันทึกลง Firestore
+  Map<String, dynamic> toFirestore() {
+    return {
+      'farmId': farmId,
+      'livestockId': livestockId,
+      'askingPrice': askingPrice,
+      'minPrice': minPrice,
+      'description': description,
+      'images': images,
+      'isNegotiable': isNegotiable,
+      'listedDate': Timestamp.fromDate(listedDate),
+      'expiryDate': expiryDate != null ? Timestamp.fromDate(expiryDate!) : null,
+      'status': status,
+      'viewCount': viewCount,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'shareTitle': shareTitle,
+      'shareDescription': shareDescription,
+      'shareTags': shareTags,
+      'socialStats': socialStats?.toJson(),
     };
   }
 }
@@ -245,6 +318,40 @@ class MarketBooking {
       'status': status,
       'queueNumber': queueNumber,
       'createdAt': createdAt.toIso8601String(),
+    };
+  }
+  
+  /// สร้าง instance จาก Firestore document
+  factory MarketBooking.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return MarketBooking(
+      id: doc.id,
+      farmId: data['farmId'] ?? '',
+      marketId: data['marketId'] ?? '',
+      bookingDate: (data['bookingDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      livestockType: data['livestockType'] ?? '',
+      quantity: data['quantity'] ?? 0,
+      estimatedWeight: (data['estimatedWeight'] as num?)?.toDouble(),
+      notes: data['notes'],
+      status: data['status'] ?? 'pending',
+      queueNumber: data['queueNumber'],
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
+  
+  /// แปลงเป็น Map สำหรับบันทึกลง Firestore
+  Map<String, dynamic> toFirestore() {
+    return {
+      'farmId': farmId,
+      'marketId': marketId,
+      'bookingDate': Timestamp.fromDate(bookingDate),
+      'livestockType': livestockType,
+      'quantity': quantity,
+      'estimatedWeight': estimatedWeight,
+      'notes': notes,
+      'status': status,
+      'queueNumber': queueNumber,
+      'createdAt': Timestamp.fromDate(createdAt),
     };
   }
 }

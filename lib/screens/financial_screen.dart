@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../widgets/app_bars/standard_app_bar.dart';
 
 class FinancialScreen extends StatefulWidget {
   const FinancialScreen({super.key});
@@ -66,27 +67,10 @@ class _FinancialScreenState extends State<FinancialScreen> {
     final netProfit = totalIncome - totalExpense;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('การเงิน'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.transparent,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFF228B22).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.home_rounded, size: 28),
-            color: const Color(0xFF228B22).withOpacity(0.8),
-            onPressed: () => context.go('/dashboard'),
-            tooltip: 'หน้าแรก',
-          ),
-        ),
-        actions: [
+      appBar: StandardAppBar(
+        type: AppBarType.main,
+        title: 'การเงิน',
+        customActions: [
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: _showAddTransactionDialog,
@@ -133,14 +117,19 @@ class _FinancialScreenState extends State<FinancialScreen> {
   }
 
   Widget _buildSummaryCards(double income, double expense, double profit) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 1.0,
-      children: [
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        int crossAxisCount = constraints.maxWidth < 600 ? 3 : 3;
+        double aspectRatio = constraints.maxWidth < 600 ? 0.9 : 1.0;
+        
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+          childAspectRatio: aspectRatio,
+          children: [
         _buildSummaryCard(
           'รายได้',
           NumberFormat('#,##0').format(income),
@@ -163,36 +152,56 @@ class _FinancialScreenState extends State<FinancialScreen> {
           profit >= 0 ? Colors.green : Colors.red,
         ),
       ],
+        );
+      },
     );
   }
 
   Widget _buildSummaryCard(String title, String value, String unit, IconData icon, Color color) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 24, color: color),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 150;
+        return Card(
+          child: Padding(
+            padding: EdgeInsets.all(isMobile ? 6 : 12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: isMobile ? 20 : 24, color: color),
+                SizedBox(height: isMobile ? 2 : 4),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: isMobile ? 12 : 14,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                ),
+                Text(
+                  unit,
+                  style: TextStyle(fontSize: isMobile ? 9 : 11),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: isMobile ? 9 : 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            Text(unit, style: Theme.of(context).textTheme.bodySmall),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

@@ -128,17 +128,22 @@ class LivestockSummaryChart extends StatelessWidget {
       case LivestockType.pigLocal:
       case LivestockType.pigBreeder:
       case LivestockType.pigFattening:
+      case LivestockType.pigBreederYoung:
         return 'สุกร';
       case LivestockType.chickenLocal:
       case LivestockType.chickenCrossbred:
       case LivestockType.chickenBroiler:
       case LivestockType.chickenLayer:
-      case LivestockType.chickenBreederPS:
-      case LivestockType.chickenBreederGP:
+      case LivestockType.chickenBreederMeatPS:
+      case LivestockType.chickenBreederLayerPS:
+      case LivestockType.chickenBreederMeatGP:
+      case LivestockType.chickenBreederLayerGP:
         return 'ไก่';
       case LivestockType.duckMeat:
       case LivestockType.duckEgg:
-      case LivestockType.duckField:
+      case LivestockType.duckMuscovy:
+      case LivestockType.duckMeatField:
+      case LivestockType.duckEggField:
         return 'เป็ด';
       case LivestockType.goatMeat:
       case LivestockType.goatDairy:
@@ -147,16 +152,11 @@ class LivestockSummaryChart extends StatelessWidget {
         return 'แกะ';
       case LivestockType.quailMeat:
       case LivestockType.quailEgg:
-      case LivestockType.quailBreeder:
         return 'นกกระทา';
       case LivestockType.dog:
         return 'สุนัข';
       case LivestockType.cat:
         return 'แมว';
-      case LivestockType.rabbit:
-        return 'กระต่าย';
-      case LivestockType.hamster:
-        return 'แฮมสเตอร์';
       case LivestockType.fishFreshwater:
         return 'ปลาน้ำจืด';
       case LivestockType.fishSaltwater:
@@ -193,17 +193,22 @@ class LivestockSummaryChart extends StatelessWidget {
       case LivestockType.pigLocal:
       case LivestockType.pigBreeder:
       case LivestockType.pigFattening:
+      case LivestockType.pigBreederYoung:
         return Colors.pink;
       case LivestockType.chickenLocal:
       case LivestockType.chickenCrossbred:
       case LivestockType.chickenBroiler:
       case LivestockType.chickenLayer:
-      case LivestockType.chickenBreederPS:
-      case LivestockType.chickenBreederGP:
+      case LivestockType.chickenBreederMeatPS:
+      case LivestockType.chickenBreederLayerPS:
+      case LivestockType.chickenBreederMeatGP:
+      case LivestockType.chickenBreederLayerGP:
         return Colors.orange;
       case LivestockType.duckMeat:
       case LivestockType.duckEgg:
-      case LivestockType.duckField:
+      case LivestockType.duckMuscovy:
+      case LivestockType.duckMeatField:
+      case LivestockType.duckEggField:
         return Colors.yellow;
       case LivestockType.goatMeat:
       case LivestockType.goatDairy:
@@ -212,12 +217,9 @@ class LivestockSummaryChart extends StatelessWidget {
         return Colors.purple;
       case LivestockType.quailMeat:
       case LivestockType.quailEgg:
-      case LivestockType.quailBreeder:
         return Colors.teal;
       case LivestockType.dog:
       case LivestockType.cat:
-      case LivestockType.rabbit:
-      case LivestockType.hamster:
         return Colors.purple;
       case LivestockType.fishFreshwater:
         return Colors.lightBlue;

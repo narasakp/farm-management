@@ -14,13 +14,15 @@
     This is a placeholder for base href that will be replaced by the value of
     the `--base-href` argument provided to `flutter build`.
   -->
-  <base href="/farm-management/">
+  <base href="/">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
 
   <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="livestock_farm_management">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
@@ -28,48 +30,77 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>livestock_farm_management</title>
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- ✅ SIMPLE FIX: เริ่มใหม่ - CSS เรียบง่าย -->
+  <style>
+    /* ปล่อยให้ glass pane ผ่านได้ */
+    flt-glass-pane {
+      pointer-events: none !important;
+    }
+    
+    /* Canvas อยู่ข้างหลัง */
+    canvas {
+      z-index: 0 !important;
+    }
+    
+    /* Text input ต้องทำงานได้ */
+    flt-text-editing-host,
+    flt-text-editing-element {
+      z-index: 999 !important;
+      pointer-events: auto !important;
+    }
+  </style>
+  
+  <!-- ✅ CRITICAL: Google Identity Services - Required for Google OAuth -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <meta name="google-signin-client_id" content="222181744079-4qn8tac4a6cvpbbpvd2jn02u0s8ie21i.apps.googleusercontent.com">
+  
+  <!-- ✅ CRITICAL: Facebook SDK for JavaScript - Required for Facebook Login -->
+  <script async defer crossorigin="anonymous" 
+    src="https://connect.facebook.net/en_US/sdk.js"></script>
+  <!-- Facebook App ID: 781015721365840 -->
+  <meta property="fb:app_id" content="781015721365840">
 </head>
 <body>
-  <!-- Floating Feedback Icon -->
-  <div id="floating-feedback" style="
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    width: 60px;
-    height: 60px;
-    background-color: #DAA520;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
-    z-index: 1000;
-    transition: all 0.3s ease;
-    opacity: 1;
-    visibility: visible;
-  " title="ข้อเสนอแนะ">
-    <span style="font-size: 24px; color: white;">💬</span>
+  <!-- Floating Feedback Icon (Flutter-Commanded) -->
+  <div id="floating-feedback" style="position: fixed; bottom: 20px; left: 20px; width: 60px; height: 60px; background-color: #228B22; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(34, 139, 34, 0.4); z-index: 9999; transition: opacity 0.3s, transform 0.3s;" title="ข้อเสนอแนะ" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+    <span style="font-size: 28px;">💬</span>
   </div>
-
   <script>
-    function navigateToFeedback() {
-      window.location.hash = '#/feedback';
+    // Simple functions called by Flutter (Dumb Receivers)
+    function showFeedbackIcon() {
+      var icon = document.getElementById('floating-feedback');
+      if (icon) {
+        icon.style.display = 'flex';
+        icon.style.opacity = '1';
+      }
     }
+    
+    function hideFeedbackIcon() {
+      var icon = document.getElementById('floating-feedback');
+      if (icon) {
+        icon.style.display = 'none';
+        icon.style.opacity = '0';
+      }
+    }
+    
+    // Click handler to navigate to feedback
     document.addEventListener('DOMContentLoaded', function() {
-      const feedbackIcon = document.getElementById('floating-feedback');
-      feedbackIcon.addEventListener('click', navigateToFeedback);
-      feedbackIcon.addEventListener('mouseenter', function() {
-        this.style.transform = 'scale(1.1)';
-        this.style.boxShadow = '0 6px 16px rgba(218, 165, 32, 0.4)';
-      });
-      feedbackIcon.addEventListener('mouseleave', function() {
-        this.style.transform = 'scale(1)';
-        this.style.boxShadow = '0 4px 12px rgba(218, 165, 32, 0.3)';
-      });
+      var icon = document.getElementById('floating-feedback');
+      if (icon) {
+        icon.addEventListener('click', function() {
+          // ✅ Use hash navigation for instant routing (no page reload)
+          // Flutter web uses hash-based routing by default
+          window.location.hash = '#/feedback';
+        });
+      }
     });
   </script>
-
+  
+  <!-- ✅ CRITICAL: Email Sender for OTP (Google Apps Script Integration) -->
+  <script src="email_sender.js"></script>
+  
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -5,6 +5,8 @@ import '../../providers/farmer_group_provider.dart';
 import '../../models/farmer_group.dart';
 import '../../utils/app_theme.dart';
 import '../../utils/responsive_helper.dart';
+import '../../widgets/app_bars/standard_app_bar.dart';
+import '../../utils/tab_navigation_mixin.dart';
 
 class FarmerGroupScreen extends StatefulWidget {
   const FarmerGroupScreen({super.key});
@@ -14,7 +16,7 @@ class FarmerGroupScreen extends StatefulWidget {
 }
 
 class _FarmerGroupScreenState extends State<FarmerGroupScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, TabNavigationMixin {
   late TabController _tabController;
   String? _selectedGroupId;
 
@@ -22,13 +24,15 @@ class _FarmerGroupScreenState extends State<FarmerGroupScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
+    initTabNavigation(_tabController, initialTab: 0, fallbackRoute: '/dashboard');
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<FarmerGroupProvider>().loadData();
+      Provider.of<FarmerGroupProvider>(context, listen: false).loadData();
     });
   }
 
   @override
   void dispose() {
+    disposeTabNavigation();
     _tabController.dispose();
     super.dispose();
   }
@@ -36,23 +40,10 @@ class _FarmerGroupScreenState extends State<FarmerGroupScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('กลุ่มเกษตรกร'),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.home_rounded, size: 28),
-            color: Colors.white,
-            onPressed: () => context.go('/dashboard'),
-            tooltip: 'หน้าแรก',
-          ),
-        ),
+      appBar: StandardAppBar(
+        type: AppBarType.main,
+        title: 'กลุ่มเกษตรกร',
+        onBackPressed: handleSmartBackPress,
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,

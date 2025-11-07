@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../providers/auth_provider.dart';
+import 'package:flutter/foundation.dart';
+import 'package:js/js.dart' as js;
+import '../providers/production_auth_provider.dart';
 
-class SidebarNavigation extends StatefulWidget {
+@js.JS('performLogout')
+external void performLogout();
+
+class SidebarNavigation extends ConsumerStatefulWidget {
   const SidebarNavigation({super.key});
 
   @override
-  State<SidebarNavigation> createState() => _SidebarNavigationState();
+  ConsumerState<SidebarNavigation> createState() => _SidebarNavigationState();
 }
 
-class _SidebarNavigationState extends State<SidebarNavigation> {
+class _SidebarNavigationState extends ConsumerState<SidebarNavigation> {
   int selectedIndex = 0;
 
   final List<NavigationItem> navigationItems = [
@@ -87,16 +92,19 @@ class _SidebarNavigationState extends State<SidebarNavigation> {
           // User Profile Section
           Container(
             padding: const EdgeInsets.all(16),
-            child: Consumer<AuthProvider>(
-              builder: (context, authProvider, child) {
-                final user = authProvider.currentUser;
+            child: Consumer(
+              builder: (context, ref, child) {
+                final user = ref.watch(currentUserProvider);
+                final displayName = user?['display_name'] as String? ?? 'ผู้ใช้';
+                final email = user?['email'] as String? ?? '';
+
                 return Column(
                   children: [
                     CircleAvatar(
                       radius: 30,
                       backgroundColor: Theme.of(context).primaryColor,
                       child: Text(
-                        user?.firstName.substring(0, 1) ?? 'U',
+                        displayName.isNotEmpty ? displayName.substring(0, 1).toUpperCase() : 'U',
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -106,12 +114,12 @@ class _SidebarNavigationState extends State<SidebarNavigation> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      user?.fullName ?? 'ผู้ใช้',
+                      displayName,
                       style: Theme.of(context).textTheme.titleMedium,
                       textAlign: TextAlign.center,
                     ),
                     Text(
-                      user?.phoneNumber ?? '',
+                      email,
                       style: Theme.of(context).textTheme.bodySmall,
                       textAlign: TextAlign.center,
                     ),
@@ -175,7 +183,12 @@ class _SidebarNavigationState extends State<SidebarNavigation> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () {
-                  context.read<AuthProvider>().logout();
+                  // Use JS interop for web logout as per Knowledge Base
+                  if (kIsWeb) {
+                    performLogout();
+                  } else {
+                    ref.read(productionAuthProvider.notifier).logout();
+                  }
                 },
                 icon: const Icon(Icons.logout),
                 label: const Text('ออกจากระบบ'),

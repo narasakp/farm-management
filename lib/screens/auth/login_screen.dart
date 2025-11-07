@@ -116,17 +116,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF228B22).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Icon(
-                            Icons.agriculture,
-                            size: 64,
-                            color: Color(0xFF228B22),
-                          ),
+                        // CPRU Logo - Minimal & Responsive Design
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            double logoSize = MediaQuery.of(context).size.width * 0.2;
+                            logoSize = logoSize.clamp(60.0, 120.0);
+                            
+                            return Container(
+                              width: logoSize,
+                              height: logoSize,
+                              child: Image.asset(
+                                'assets/images/cpru_logo.gif',
+                                width: logoSize,
+                                height: logoSize,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(
+                                    Icons.agriculture,
+                                    size: logoSize * 0.8,
+                                    color: const Color(0xFF228B22),
+                                  );
+                                },
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(height: 16),
                         Text(

@@ -2,7 +2,7 @@
     "name": "livestock_farm_management",
     "short_name": "livestock_farm_management",
     "start_url": ".",
-    "display": "browser",
+    "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
     "description": "A new Flutter project.",

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/production_provider.dart';
-import '../../models/production_management.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../models/production_management.dart';
+import '../../providers/production_provider.dart';
+import '../../utils/app_theme.dart';
+import '../../widgets/app_bars/standard_app_bar.dart';
+import '../../utils/tab_navigation_mixin.dart';
 
 class ProductionManagementScreen extends StatefulWidget {
   const ProductionManagementScreen({super.key});
@@ -13,7 +17,7 @@ class ProductionManagementScreen extends StatefulWidget {
 }
 
 class _ProductionManagementScreenState extends State<ProductionManagementScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, TabNavigationMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -23,10 +27,12 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    initTabNavigation(_tabController, initialTab: 0, fallbackRoute: '/dashboard');
   }
 
   @override
   void dispose() {
+    disposeTabNavigation();
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -35,10 +41,10 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('จัดการการผลิต'),
-        backgroundColor: const Color(0xFF8B4513),
-        foregroundColor: Colors.white,
+      appBar: StandardAppBar(
+        type: AppBarType.main,  // ชั้นที่ 1: Back + Logout
+        title: 'จัดการการผลิต',
+        onBackPressed: handleSmartBackPress,
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
@@ -103,15 +109,20 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Summary Cards
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 1.5,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            children: [
+          // Summary Cards - Responsive
+          LayoutBuilder(
+            builder: (context, constraints) {
+              int crossAxisCount = constraints.maxWidth < 600 ? 2 : 4;
+              double aspectRatio = constraints.maxWidth < 600 ? 1.3 : 1.5;
+              
+              return GridView.count(
+                crossAxisCount: crossAxisCount,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                childAspectRatio: aspectRatio,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                children: [
               _buildSummaryCard(
                 'รวมการผลิต',
                 '${summary.totalQuantity.toStringAsFixed(1)}',
@@ -141,6 +152,8 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
                 subtitle: 'รายการ',
               ),
             ],
+              );
+            },
           ),
           
           const SizedBox(height: 24),
@@ -425,36 +438,48 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
   }
 
   Widget _buildSummaryCard(String title, String value, IconData icon, Color color, {String? subtitle}) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32, color: color),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 200;
+        return Card(
+          elevation: 4,
+          child: Padding(
+            padding: EdgeInsets.all(isMobile ? 8 : 16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: isMobile ? 24 : 32, color: color),
+                SizedBox(height: isMobile ? 4 : 8),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: isMobile ? 16 : 20,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                ),
+                SizedBox(height: isMobile ? 2 : 4),
+                Text(
+                  title,
+                  style: TextStyle(fontSize: isMobile ? 10 : 12),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (subtitle != null)
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: isMobile ? 8 : 10, color: Colors.grey),
+                  ),
+              ],
             ),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-            if (subtitle != null)
-              Text(
-                subtitle,
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
-              ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -666,7 +691,7 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
 
     return LineChart(
       LineChartData(
-        gridData: const FlGridData(show: true),
+        gridData: FlGridData(show: true),
         titlesData: FlTitlesData(
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -694,8 +719,8 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
               },
             ),
           ),
-          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         borderData: FlBorderData(show: true),
         lineBarsData: [
@@ -704,7 +729,7 @@ class _ProductionManagementScreenState extends State<ProductionManagementScreen>
             isCurved: true,
             color: type.color,
             barWidth: 3,
-            dotData: const FlDotData(show: true),
+            dotData: FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
               color: type.color.withOpacity(0.1),

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/feed_provider.dart';
-import '../../models/feed_management.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../models/feed_management.dart';
+import '../../providers/feed_provider.dart';
+import '../../utils/app_theme.dart';
+import '../../widgets/app_bars/standard_app_bar.dart';
+import '../../utils/tab_navigation_mixin.dart';
 
 class FeedManagementScreen extends StatefulWidget {
   const FeedManagementScreen({super.key});
@@ -12,7 +16,7 @@ class FeedManagementScreen extends StatefulWidget {
 }
 
 class _FeedManagementScreenState extends State<FeedManagementScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, TabNavigationMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -22,10 +26,12 @@ class _FeedManagementScreenState extends State<FeedManagementScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    initTabNavigation(_tabController, initialTab: 0, fallbackRoute: '/dashboard');
   }
 
   @override
   void dispose() {
+    disposeTabNavigation();
     _tabController.dispose();
     _searchController.dispose();
     super.dispose();
@@ -34,10 +40,11 @@ class _FeedManagementScreenState extends State<FeedManagementScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('จัดการอาหารสัตว์'),
-        backgroundColor: const Color(0xFF8B4513),
-        foregroundColor: Colors.white,
+      appBar: StandardAppBar(
+        type: AppBarType.main,  // ชั้นที่ 1
+        title: 'จัดการอาหารสัตว์',
+        onBackPressed: handleSmartBackPress,
+        showSearch: false,  // ไม่มี search icon
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/livestock.dart';
 import '../../providers/farm_provider.dart';
 import '../../providers/livestock_provider.dart';
+import '../../widgets/app_bars/standard_app_bar.dart';
 import 'widgets/health_record_form.dart';
 
 class LivestockScreen extends StatefulWidget {
@@ -33,13 +34,10 @@ class _LivestockScreenState extends State<LivestockScreen> {
     final farmId = farmProvider.selectedFarm?.id;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('จัดการปศุสัตว์'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/dashboard'),
-        ),
-        actions: [
+      appBar: StandardAppBar(
+        type: AppBarType.main,
+        title: 'จัดการปศุสัตว์',
+        customActions: [
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {

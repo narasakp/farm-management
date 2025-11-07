@@ -1,0 +1,40 @@
+# Dependencies ที่ต้องเพิ่มใน pubspec.yaml
+# สำหรับ Social Commerce Feature
+
+# Copy ส่วนนี้ไปใส่ใน pubspec.yaml ของคุณ
+
+dependencies:
+  # Existing dependencies...
+  
+  # 🆕 Social Commerce Dependencies
+  share_plus: ^7.2.0              # สำหรับแชร์ไป social media
+  url_launcher: ^6.2.0            # เปิด URLs และ deep links
+  uni_links: ^0.5.1               # จัดการ deep links
+  qr_flutter: ^4.1.0              # สร้าง QR codes
+  go_router: ^12.1.0              # Navigation และ routing
+  http: ^1.1.0                    # HTTP requests สำหรับ APIs
+  
+  # Firebase (ถ้ายังไม่มี)
+  firebase_core: ^2.24.0
+  cloud_firestore: ^4.13.0
+  firebase_storage: ^11.5.0
+  firebase_analytics: ^10.7.0
+  
+  # UI & Utilities
+  intl: ^0.18.0                   # Date/Number formatting
+  provider: ^6.1.0                # State management
+  
+dev_dependencies:
+  # Existing dev dependencies...
+  
+  # 🆕 Testing Dependencies
+  mockito: ^5.4.0                 # Mocking สำหรับ tests
+  build_runner: ^2.4.0            # Generate mocks
+  integration_test:               # Integration testing
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+
+# หลังจากเพิ่มแล้วให้รัน:
+# flutter pub get
+# flutter pub run build_runner build --delete-conflicting-outputs

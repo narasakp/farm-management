@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../utils/price_formatter.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/health_management.dart';
 import '../../providers/health_provider.dart';
 import '../../utils/app_theme.dart';
+import '../../widgets/app_bars/standard_app_bar.dart';
+import '../../utils/tab_navigation_mixin.dart';
 
 class HealthManagementScreen extends StatefulWidget {
   const HealthManagementScreen({super.key});
@@ -12,7 +15,7 @@ class HealthManagementScreen extends StatefulWidget {
   State<HealthManagementScreen> createState() => _HealthManagementScreenState();
 }
 
-class _HealthManagementScreenState extends State<HealthManagementScreen> with TickerProviderStateMixin {
+class _HealthManagementScreenState extends State<HealthManagementScreen> with TickerProviderStateMixin, TabNavigationMixin {
   late TabController _tabController;
   String _searchQuery = '';
 
@@ -20,10 +23,12 @@ class _HealthManagementScreenState extends State<HealthManagementScreen> with Ti
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    initTabNavigation(_tabController, initialTab: 0, fallbackRoute: '/dashboard');
   }
 
   @override
   void dispose() {
+    disposeTabNavigation();
     _tabController.dispose();
     super.dispose();
   }
@@ -31,25 +36,11 @@ class _HealthManagementScreenState extends State<HealthManagementScreen> with Ti
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('จัดการสุขภาพปศุสัตว์'),
-        backgroundColor: Color(0xFF228B22),
-        foregroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.transparent,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Color(0xFF8B4513).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.home_rounded, size: 28),
-            color: Color(0xFF8B4513),
-            onPressed: () => context.go('/dashboard'),
-            tooltip: 'หน้าแรก',
-          ),
-        ),
+      appBar: StandardAppBar(
+        type: AppBarType.main,  // ชั้นที่ 1
+        title: 'จัดการสุขภาพปศุสัตว์',
+        onBackPressed: handleSmartBackPress,
+        showSearch: false,  // ไม่มี search icon
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -128,7 +119,7 @@ class _HealthManagementScreenState extends State<HealthManagementScreen> with Ti
         ),
         _buildSummaryCard(
           'ค่าใช้จ่าย',
-          '฿${summary.totalCost.toStringAsFixed(0)}',
+          PriceFormatter.format(summary.totalCost),
           Icons.attach_money,
           Color(0xFFCD5C5C),
         ),
@@ -435,7 +426,7 @@ class _HealthManagementScreenState extends State<HealthManagementScreen> with Ti
             ),
             if (record.cost != null)
               Text(
-                'ค่าใช้จ่าย: ฿${record.cost!.toStringAsFixed(0)}',
+                'ค่าใช้จ่าย: ${PriceFormatter.format(record.cost!)}',
                 style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
           ],
@@ -489,7 +480,7 @@ class _HealthManagementScreenState extends State<HealthManagementScreen> with Ti
               if (record.veterinarian != null)
                 Text('สัตวแพทย์: ${record.veterinarian}'),
               if (record.cost != null)
-                Text('ค่าใช้จ่าย: ฿${record.cost!.toStringAsFixed(0)}'),
+                Text('ค่าใช้จ่าย: ${PriceFormatter.format(record.cost!)}'),
               const SizedBox(height: 8),
               Text('รายละเอียด: ${record.description}'),
               if (record.notes != null)
