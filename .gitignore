@@ -1,51 +1,110 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.buildlog/
-.history
-.svn/
-migrate_working_dir/
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# ============================================
+# Flutter & Dart
+# ============================================
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .packages
 .pub-cache/
 .pub/
-# /build/
+build/
+*.dill
+*.track.dill
 
-# Symbolication related
-app.*.symbols
+# ============================================
+# IDE
+# ============================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
-# Obfuscation related
-app.*.map.json
+# ============================================
+# Testing & Coverage
+# ============================================
+coverage/
+.test_coverage.dart
 
-# Android Studio will place# Build artifacts (commented out for deployment)
-# /build/android/app/debug
-/android/app/profile
-/android/app/release
+# ============================================
+# Backend & Scripts (ไม่ต้อง commit)
+# ============================================
+backend/
+scripts/
+*.bat
+*.ps1
+*.sh
+*.py
+simple_server.py
 
-# Web related
-/web/build/
+# ============================================
+# Temporary & Build Files
+# ============================================
+*.log
+*.txt
+*.cache
+error.txt
+build_output.txt
+build_errors.txt
+analyze_output.txt
 
-# Windows related
-windows/flutter/generated_plugin_registrant.cc
-windows/flutter/generated_plugin_registrant.h
+# ============================================
+# Documentation (ย้ายไปที่อื่นแล้ว)
+# ============================================
+docs/
+*.md
+!README.md
+
+# ============================================
+# Config & Secrets
+# ============================================
+*.config.js
+*.env
+*.local
+FACEBOOK_APP_CONFIG.txt
+cors.json
+firestore.indexes.json
+firestore.rules
+
+# ============================================
+# Assets (ถ้าไม่ได้ใช้)
+# ============================================
+assets/thailand.json
+assets/thailand_data.json
+
+# ============================================
+# Temporary Folders
+# ============================================
+.githooks/
+.github/
+
+# ============================================
+# Web Build Artifacts
+# ============================================
+web/.last_build_id
+web/assets/assets/
+web/canvaskit/
+web/flutter.js
+web/flutter_bootstrap.js
+web/flutter_service_worker.js
+web/main.dart.js
+web/version.json
+
+# ============================================
+# Node.js (ถ้ามี)
+# ============================================
+node_modules/
+package-lock.json
+
+# ============================================
+# Database
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================
+# OS
+# ============================================
+.DS_Store
+Thumbs.db
