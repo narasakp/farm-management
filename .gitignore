@@ -76,7 +76,7 @@ assets/thailand_data.json
 # Temporary Folders
 # ============================================
 .githooks/
-.github/
+# .github/ - Allow GitHub Actions workflows
 
 # ============================================
 # Web Build Artifacts

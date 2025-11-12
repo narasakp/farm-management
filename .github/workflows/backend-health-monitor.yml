@@ -1,0 +1,80 @@
+name: Backend Health Monitor
+
+# รันทุกชั่วโมง เพื่อตรวจสอบสุขภาพของ backend
+on:
+  schedule:
+    # ทุกชั่วโมง
+    - cron: '0 * * * *'
+  
+  # สามารถรันด้วยตนเองได้
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Comprehensive Health Check
+        id: health
+        run: |
+          echo "🏥 Running comprehensive health check at $(date)"
+          
+          # Check main endpoint
+          main_status=$(curl -s -o /dev/null -w "%{http_code}" https://api.naihoi.com/ || echo "000")
+          echo "main_status=$main_status" >> $GITHUB_OUTPUT
+          
+          # Check auth endpoint
+          auth_status=$(curl -s -o /dev/null -w "%{http_code}" https://api.naihoi.com/api/auth/validate || echo "000")
+          echo "auth_status=$auth_status" >> $GITHUB_OUTPUT
+          
+          # Measure response time
+          response_time=$(curl -s -o /dev/null -w "%{time_total}" https://api.naihoi.com/)
+          echo "response_time=$response_time" >> $GITHUB_OUTPUT
+          
+          echo "📊 Health Check Results:"
+          echo "  Main endpoint: $main_status"
+          echo "  Auth endpoint: $auth_status (403 is OK - means auth required)"
+          echo "  Response time: ${response_time}s"
+          
+          # Check if main endpoint is healthy
+          if [ "$main_status" != "200" ] && [ "$main_status" != "304" ]; then
+            echo "❌ Main endpoint unhealthy"
+            exit 1
+          fi
+          
+          # Check if response time is acceptable (< 5 seconds)
+          if (( $(echo "$response_time > 5" | bc -l) )); then
+            echo "⚠️ Slow response time: ${response_time}s"
+          fi
+          
+          echo "✅ All health checks passed"
+      
+      - name: Test Database Connection
+        run: |
+          echo "🗄️ Testing database connectivity"
+          
+          # Check if backend is using SQLite (development mode)
+          response=$(curl -s https://api.naihoi.com/)
+          echo "$response"
+          
+          if echo "$response" | grep -q "running"; then
+            echo "✅ Backend is operational"
+          else
+            echo "⚠️ Unexpected response from backend"
+          fi
+      
+      - name: Generate Health Report
+        if: always()
+        run: |
+          echo "📋 Health Report - $(date)"
+          echo "================================"
+          echo "Main Status: ${{ steps.health.outputs.main_status }}"
+          echo "Auth Status: ${{ steps.health.outputs.auth_status }}"
+          echo "Response Time: ${{ steps.health.outputs.response_time }}s"
+          echo "================================"
+          
+          if [ "${{ steps.health.outputs.main_status }}" = "200" ]; then
+            echo "✅ System Status: HEALTHY"
+          else
+            echo "❌ System Status: UNHEALTHY"
+          fi

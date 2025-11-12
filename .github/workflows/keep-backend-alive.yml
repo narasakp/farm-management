@@ -1,0 +1,51 @@
+name: Keep Backend Alive
+
+# รัน cron job ทุก 10 นาที เพื่อป้องกัน Railway cold start
+on:
+  schedule:
+    # ทุก 10 นาที
+    - cron: '*/10 * * * *'
+  
+  # สามารถรันด้วยตนเองได้
+  workflow_dispatch:
+
+jobs:
+  ping-backend:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Ping Backend Health Check
+        run: |
+          echo "🔍 Pinging backend at $(date)"
+          
+          # Ping main endpoint
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://api.naihoi.com/ || echo "000")
+          echo "Response code: $response"
+          
+          if [ "$response" = "200" ] || [ "$response" = "304" ]; then
+            echo "✅ Backend is alive and responding"
+          else
+            echo "⚠️ Backend returned unexpected status: $response"
+            exit 1
+          fi
+      
+      - name: Ping Health Endpoint
+        run: |
+          echo "🏥 Checking health endpoint"
+          
+          # Ping health endpoint with detailed response
+          curl -s https://api.naihoi.com/ | jq '.' || echo "Failed to parse JSON"
+          
+          echo "✅ Health check complete"
+      
+      - name: Log Success
+        if: success()
+        run: |
+          echo "✅ Keep-alive successful at $(date)"
+          echo "Backend is running smoothly"
+      
+      - name: Alert on Failure
+        if: failure()
+        run: |
+          echo "❌ Keep-alive failed at $(date)"
+          echo "Backend might be down or unresponsive"
