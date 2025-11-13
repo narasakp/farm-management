@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/farm-management/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="livestock_farm_management">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>livestock_farm_management</title>
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- ✅ SIMPLE FIX: เริ่มใหม่ - CSS เรียบง่าย -->
+  <style>
+    /* ปล่อยให้ glass pane ผ่านได้ */
+    flt-glass-pane {
+      pointer-events: none !important;
+    }
+    
+    /* Canvas อยู่ข้างหลัง */
+    canvas {
+      z-index: 0 !important;
+    }
+    
+    /* Text input ต้องทำงานได้ */
+    flt-text-editing-host,
+    flt-text-editing-element {
+      z-index: 999 !important;
+      pointer-events: auto !important;
+    }
+  </style>
+  
+  <!-- ✅ CRITICAL: Google Identity Services - Required for Google OAuth -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <meta name="google-signin-client_id" content="222181744079-4qn8tac4a6cvpbbpvd2jn02u0s8ie21i.apps.googleusercontent.com">
+  
+  <!-- ✅ CRITICAL: Facebook SDK for JavaScript - Required for Facebook Login -->
+  <script async defer crossorigin="anonymous" 
+    src="https://connect.facebook.net/en_US/sdk.js"></script>
+  <!-- Facebook App ID: 781015721365840 -->
+  <meta property="fb:app_id" content="781015721365840">
+</head>
+<body>
+  <!-- Floating Feedback Icon (Flutter-Commanded) -->
+  <div id="floating-feedback" style="position: fixed; bottom: 20px; left: 20px; width: 60px; height: 60px; background-color: #228B22; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(34, 139, 34, 0.4); z-index: 9999; transition: opacity 0.3s, transform 0.3s;" title="ข้อเสนอแนะ" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+    <span style="font-size: 28px;">💬</span>
+  </div>
+  <script>
+    // Simple functions called by Flutter (Dumb Receivers)
+    function showFeedbackIcon() {
+      var icon = document.getElementById('floating-feedback');
+      if (icon) {
+        icon.style.display = 'flex';
+        icon.style.opacity = '1';
+      }
+    }
+    
+    function hideFeedbackIcon() {
+      var icon = document.getElementById('floating-feedback');
+      if (icon) {
+        icon.style.display = 'none';
+        icon.style.opacity = '0';
+      }
+    }
+    
+    // Click handler to navigate to feedback
+    document.addEventListener('DOMContentLoaded', function() {
+      var icon = document.getElementById('floating-feedback');
+      if (icon) {
+        icon.addEventListener('click', function() {
+          // ✅ Use hash navigation for instant routing (no page reload)
+          // Flutter web uses hash-based routing by default
+          window.location.hash = '#/feedback';
+        });
+      }
+    });
+  </script>
+  
+  <!-- ✅ CRITICAL: Email Sender for OTP (Google Apps Script Integration) -->
+  <script src="email_sender.js"></script>
+  
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
